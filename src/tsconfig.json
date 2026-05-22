@@ -18,12 +18,6 @@
 			"trusted-types",
 			"winreg",
 			"wicg-file-system-access"
-		],
-		"plugins": [
-			{
-				"name": "tsec",
-				"exemptionConfig": "./tsec.exemptions.json"
-			}
 		]
 	},
 	"include": [
