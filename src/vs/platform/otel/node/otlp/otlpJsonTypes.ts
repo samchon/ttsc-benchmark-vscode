@@ -26,22 +26,21 @@
  * fields are ignored by the decoder (forwards-compatible).
  */
 
-
 /** Status code as defined by the OTLP trace status enum. */
 export const enum OtlpStatusCode {
-	UNSET = 0,
-	OK = 1,
-	ERROR = 2,
+  UNSET = 0,
+  OK = 1,
+  ERROR = 2,
 }
 
 /** Span kind as defined by the OTLP trace span_kind enum. */
 export const enum OtlpSpanKind {
-	UNSPECIFIED = 0,
-	INTERNAL = 1,
-	SERVER = 2,
-	CLIENT = 3,
-	PRODUCER = 4,
-	CONSUMER = 5,
+  UNSPECIFIED = 0,
+  INTERNAL = 1,
+  SERVER = 2,
+  CLIENT = 3,
+  PRODUCER = 4,
+  CONSUMER = 5,
 }
 
 /**
@@ -49,89 +48,89 @@ export const enum OtlpSpanKind {
  * for empty values which may be entirely absent (proto3 defaults).
  */
 export interface IOtlpAnyValue {
-	readonly stringValue?: string;
-	readonly boolValue?: boolean;
-	/** Stringified int64. */
-	readonly intValue?: string | number;
-	readonly doubleValue?: number;
-	readonly arrayValue?: { readonly values?: readonly IOtlpAnyValue[] };
-	readonly kvlistValue?: { readonly values?: readonly IOtlpKeyValue[] };
-	/** Base64-encoded bytes. */
-	readonly bytesValue?: string;
+  readonly stringValue?: string;
+  readonly boolValue?: boolean;
+  /** Stringified int64. */
+  readonly intValue?: string | number;
+  readonly doubleValue?: number;
+  readonly arrayValue?: { readonly values?: readonly IOtlpAnyValue[] };
+  readonly kvlistValue?: { readonly values?: readonly IOtlpKeyValue[] };
+  /** Base64-encoded bytes. */
+  readonly bytesValue?: string;
 }
 
 export interface IOtlpKeyValue {
-	readonly key: string;
-	readonly value?: IOtlpAnyValue;
+  readonly key: string;
+  readonly value?: IOtlpAnyValue;
 }
 
 export interface IOtlpStatus {
-	readonly code?: OtlpStatusCode;
-	readonly message?: string;
+  readonly code?: OtlpStatusCode;
+  readonly message?: string;
 }
 
 export interface IOtlpEvent {
-	readonly timeUnixNano?: string;
-	readonly name?: string;
-	readonly attributes?: readonly IOtlpKeyValue[];
-	readonly droppedAttributesCount?: number;
+  readonly timeUnixNano?: string;
+  readonly name?: string;
+  readonly attributes?: readonly IOtlpKeyValue[];
+  readonly droppedAttributesCount?: number;
 }
 
 export interface IOtlpLink {
-	readonly traceId?: string;
-	readonly spanId?: string;
-	readonly traceState?: string;
-	readonly attributes?: readonly IOtlpKeyValue[];
-	readonly droppedAttributesCount?: number;
-	readonly flags?: number;
+  readonly traceId?: string;
+  readonly spanId?: string;
+  readonly traceState?: string;
+  readonly attributes?: readonly IOtlpKeyValue[];
+  readonly droppedAttributesCount?: number;
+  readonly flags?: number;
 }
 
 export interface IOtlpSpan {
-	readonly traceId: string;
-	readonly spanId: string;
-	readonly traceState?: string;
-	readonly parentSpanId?: string;
-	readonly flags?: number;
-	readonly name?: string;
-	readonly kind?: OtlpSpanKind;
-	readonly startTimeUnixNano?: string;
-	readonly endTimeUnixNano?: string;
-	readonly attributes?: readonly IOtlpKeyValue[];
-	readonly droppedAttributesCount?: number;
-	readonly events?: readonly IOtlpEvent[];
-	readonly droppedEventsCount?: number;
-	readonly links?: readonly IOtlpLink[];
-	readonly droppedLinksCount?: number;
-	readonly status?: IOtlpStatus;
+  readonly traceId: string;
+  readonly spanId: string;
+  readonly traceState?: string;
+  readonly parentSpanId?: string;
+  readonly flags?: number;
+  readonly name?: string;
+  readonly kind?: OtlpSpanKind;
+  readonly startTimeUnixNano?: string;
+  readonly endTimeUnixNano?: string;
+  readonly attributes?: readonly IOtlpKeyValue[];
+  readonly droppedAttributesCount?: number;
+  readonly events?: readonly IOtlpEvent[];
+  readonly droppedEventsCount?: number;
+  readonly links?: readonly IOtlpLink[];
+  readonly droppedLinksCount?: number;
+  readonly status?: IOtlpStatus;
 }
 
 export interface IOtlpInstrumentationScope {
-	readonly name?: string;
-	readonly version?: string;
-	readonly attributes?: readonly IOtlpKeyValue[];
-	readonly droppedAttributesCount?: number;
+  readonly name?: string;
+  readonly version?: string;
+  readonly attributes?: readonly IOtlpKeyValue[];
+  readonly droppedAttributesCount?: number;
 }
 
 export interface IOtlpScopeSpans {
-	readonly scope?: IOtlpInstrumentationScope;
-	readonly spans?: readonly IOtlpSpan[];
-	readonly schemaUrl?: string;
+  readonly scope?: IOtlpInstrumentationScope;
+  readonly spans?: readonly IOtlpSpan[];
+  readonly schemaUrl?: string;
 }
 
 export interface IOtlpResource {
-	readonly attributes?: readonly IOtlpKeyValue[];
-	readonly droppedAttributesCount?: number;
+  readonly attributes?: readonly IOtlpKeyValue[];
+  readonly droppedAttributesCount?: number;
 }
 
 export interface IOtlpResourceSpans {
-	readonly resource?: IOtlpResource;
-	readonly scopeSpans?: readonly IOtlpScopeSpans[];
-	readonly schemaUrl?: string;
+  readonly resource?: IOtlpResource;
+  readonly scopeSpans?: readonly IOtlpScopeSpans[];
+  readonly schemaUrl?: string;
 }
 
 /** The body shape of `POST /v1/traces`. */
 export interface IOtlpExportTraceServiceRequest {
-	readonly resourceSpans?: readonly IOtlpResourceSpans[];
+  readonly resourceSpans?: readonly IOtlpResourceSpans[];
 }
 
 /**
@@ -141,8 +140,8 @@ export interface IOtlpExportTraceServiceRequest {
  * On partial success: `partialSuccess` is set; the request is NOT retried.
  */
 export interface IOtlpExportTraceServiceResponse {
-	readonly partialSuccess?: {
-		readonly rejectedSpans?: number;
-		readonly errorMessage?: string;
-	};
+  readonly partialSuccess?: {
+    readonly rejectedSpans?: number;
+    readonly errorMessage?: string;
+  };
 }

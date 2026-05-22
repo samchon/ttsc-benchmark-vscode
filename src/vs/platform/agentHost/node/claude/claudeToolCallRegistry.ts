@@ -3,9 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { ILogService } from '../../../log/common/log.js';
-import type { StringOrMarkdown } from '../../common/state/protocol/state.js';
-import { getClaudeInvocationMessage, getClaudeToolDisplayName, getClaudeToolInputString } from './claudeToolDisplay.js';
+import type { ILogService } from "../../../log/common/log.js";
+import type { StringOrMarkdown } from "../../common/state/protocol/state.js";
+import {
+  getClaudeInvocationMessage,
+  getClaudeToolDisplayName,
+  getClaudeToolInputString,
+} from "./claudeToolDisplay.js";
 
 /**
  * Phase 8.5 — per-tool-call info computed at `content_block_stop` and
@@ -16,18 +20,18 @@ import { getClaudeInvocationMessage, getClaudeToolDisplayName, getClaudeToolInpu
  * `input_json_delta` buffer is complete and parseable).
  */
 export interface IClaudeToolStartInfo {
-	readonly toolName: string;
-	readonly displayName: string;
-	readonly parsedInput: Record<string, unknown> | undefined;
-	readonly invocationMessage: StringOrMarkdown;
-	readonly toolInput: string | undefined;
+  readonly toolName: string;
+  readonly displayName: string;
+  readonly parsedInput: Record<string, unknown> | undefined;
+  readonly invocationMessage: StringOrMarkdown;
+  readonly toolInput: string | undefined;
 }
 
 interface IRegistryEntry {
-	readonly toolName: string;
-	readonly turnId: string;
-	inputBuffer: string;
-	info: IClaudeToolStartInfo | undefined;
+  readonly toolName: string;
+  readonly turnId: string;
+  inputBuffer: string;
+  info: IClaudeToolStartInfo | undefined;
 }
 
 /**
@@ -61,135 +65,156 @@ interface IRegistryEntry {
  * registry as `state.toolCalls`) into every invocation.
  */
 export class ClaudeToolCallRegistry {
-	private readonly _entries = new Map<string, IRegistryEntry>();
+  private readonly _entries = new Map<string, IRegistryEntry>();
 
-	/**
-	 * Begin tracking a tool call. Called from `content_block_start`
-	 * for a `tool_use` block. Allocates the delta buffer; the
-	 * computed info bag is filled in by {@link finalize}.
-	 */
-	begin(toolUseId: string, toolName: string, turnId: string): void {
-		this._entries.set(toolUseId, {
-			toolName,
-			turnId,
-			inputBuffer: '',
-			info: undefined,
-		});
-	}
+  /**
+   * Begin tracking a tool call. Called from `content_block_start`
+   * for a `tool_use` block. Allocates the delta buffer; the
+   * computed info bag is filled in by {@link finalize}.
+   */
+  begin(toolUseId: string, toolName: string, turnId: string): void {
+    this._entries.set(toolUseId, {
+      toolName,
+      turnId,
+      inputBuffer: "",
+      info: undefined,
+    });
+  }
 
-	/**
-	 * Append one `input_json_delta.partial_json` chunk. No-op if the
-	 * `tool_use_id` is unknown (the caller already logged a warning
-	 * about the index mismatch).
-	 */
-	appendInputDelta(toolUseId: string, partialJson: string): void {
-		const entry = this._entries.get(toolUseId);
-		if (!entry) {
-			return;
-		}
-		entry.inputBuffer += partialJson;
-	}
+  /**
+   * Append one `input_json_delta.partial_json` chunk. No-op if the
+   * `tool_use_id` is unknown (the caller already logged a warning
+   * about the index mismatch).
+   */
+  appendInputDelta(toolUseId: string, partialJson: string): void {
+    const entry = this._entries.get(toolUseId);
+    if (!entry) {
+      return;
+    }
+    entry.inputBuffer += partialJson;
+  }
 
-	/**
-	 * Parse the accumulated buffer and stash the computed
-	 * {@link IClaudeToolStartInfo}. Called from `content_block_stop`.
-	 * Parse failures fall back to `parsedInput: undefined`; the
-	 * past-tense helper handles that by returning a generic message.
-	 */
-	finalize(toolUseId: string): void {
-		const entry = this._entries.get(toolUseId);
-		if (!entry) {
-			return;
-		}
-		let parsedInput: Record<string, unknown> | undefined;
-		if (entry.inputBuffer.length > 0) {
-			try {
-				const parsed: unknown = JSON.parse(entry.inputBuffer);
-				if (parsed !== null && typeof parsed === 'object') {
-					parsedInput = parsed as Record<string, unknown>;
-				}
-			} catch {
-				// Malformed JSON — fall through with `parsedInput: undefined`.
-			}
-		}
-		// Preserve the raw buffer as a fallback `toolInput` so a malformed
-		// or non-object payload still surfaces SOMETHING in the UI rather
-		// than leaving the input section empty.
-		const rawFallback = entry.inputBuffer.length > 0 ? entry.inputBuffer : undefined;
-		this._writeInfo(entry, parsedInput, rawFallback);
-		// Buffer is no longer needed once parsed.
-		entry.inputBuffer = '';
-	}
+  /**
+   * Parse the accumulated buffer and stash the computed
+   * {@link IClaudeToolStartInfo}. Called from `content_block_stop`.
+   * Parse failures fall back to `parsedInput: undefined`; the
+   * past-tense helper handles that by returning a generic message.
+   */
+  finalize(toolUseId: string): void {
+    const entry = this._entries.get(toolUseId);
+    if (!entry) {
+      return;
+    }
+    let parsedInput: Record<string, unknown> | undefined;
+    if (entry.inputBuffer.length > 0) {
+      try {
+        const parsed: unknown = JSON.parse(entry.inputBuffer);
+        if (parsed !== null && typeof parsed === "object") {
+          parsedInput = parsed as Record<string, unknown>;
+        }
+      } catch {
+        // Malformed JSON — fall through with `parsedInput: undefined`.
+      }
+    }
+    // Preserve the raw buffer as a fallback `toolInput` so a malformed
+    // or non-object payload still surfaces SOMETHING in the UI rather
+    // than leaving the input section empty.
+    const rawFallback =
+      entry.inputBuffer.length > 0 ? entry.inputBuffer : undefined;
+    this._writeInfo(entry, parsedInput, rawFallback);
+    // Buffer is no longer needed once parsed.
+    entry.inputBuffer = "";
+  }
 
-	/**
-	 * Seed {@link IClaudeToolStartInfo} directly from a pre-parsed
-	 * input object. Used for inner subagent tool uses, which arrive
-	 * already-parsed on the synthesized `assistant` message rather
-	 * than via streamed `input_json_delta` chunks. Without this the
-	 * registry entry's `info` would stay `undefined` and the live
-	 * `tool_result` handler would emit the generic
-	 * `"{displayName} finished"` past-tense, violating D6 (live/replay
-	 * parity).
-	 */
-	seedParsedInput(toolUseId: string, parsedInput: unknown): void {
-		const entry = this._entries.get(toolUseId);
-		if (!entry) {
-			return;
-		}
-		const normalized = (parsedInput !== null && typeof parsedInput === 'object')
-			? parsedInput as Record<string, unknown>
-			: undefined;
-		this._writeInfo(entry, normalized);
-	}
+  /**
+   * Seed {@link IClaudeToolStartInfo} directly from a pre-parsed
+   * input object. Used for inner subagent tool uses, which arrive
+   * already-parsed on the synthesized `assistant` message rather
+   * than via streamed `input_json_delta` chunks. Without this the
+   * registry entry's `info` would stay `undefined` and the live
+   * `tool_result` handler would emit the generic
+   * `"{displayName} finished"` past-tense, violating D6 (live/replay
+   * parity).
+   */
+  seedParsedInput(toolUseId: string, parsedInput: unknown): void {
+    const entry = this._entries.get(toolUseId);
+    if (!entry) {
+      return;
+    }
+    const normalized =
+      parsedInput !== null && typeof parsedInput === "object"
+        ? (parsedInput as Record<string, unknown>)
+        : undefined;
+    this._writeInfo(entry, normalized);
+  }
 
-	private _writeInfo(entry: IRegistryEntry, parsedInput: Record<string, unknown> | undefined, rawFallback?: string): void {
-		const displayName = getClaudeToolDisplayName(entry.toolName);
-		entry.info = {
-			toolName: entry.toolName,
-			displayName,
-			parsedInput,
-			invocationMessage: getClaudeInvocationMessage(entry.toolName, displayName, parsedInput),
-			toolInput: getClaudeToolInputString(entry.toolName, parsedInput) ?? rawFallback,
-		};
-	}
+  private _writeInfo(
+    entry: IRegistryEntry,
+    parsedInput: Record<string, unknown> | undefined,
+    rawFallback?: string,
+  ): void {
+    const displayName = getClaudeToolDisplayName(entry.toolName);
+    entry.info = {
+      toolName: entry.toolName,
+      displayName,
+      parsedInput,
+      invocationMessage: getClaudeInvocationMessage(
+        entry.toolName,
+        displayName,
+        parsedInput,
+      ),
+      toolInput:
+        getClaudeToolInputString(entry.toolName, parsedInput) ?? rawFallback,
+    };
+  }
 
-	/**
-	 * Cross-message lookup. Returns `undefined` if the
-	 * `tool_use_id` is unknown (defense-in-depth against transport
-	 * drift / replay). The `info` field may be `undefined` if the
-	 * tool block never reached `content_block_stop`.
-	 */
-	lookup(toolUseId: string): { readonly turnId: string; readonly toolName: string; readonly info: IClaudeToolStartInfo | undefined } | undefined {
-		const entry = this._entries.get(toolUseId);
-		if (!entry) {
-			return undefined;
-		}
-		return { turnId: entry.turnId, toolName: entry.toolName, info: entry.info };
-	}
+  /**
+   * Cross-message lookup. Returns `undefined` if the
+   * `tool_use_id` is unknown (defense-in-depth against transport
+   * drift / replay). The `info` field may be `undefined` if the
+   * tool block never reached `content_block_stop`.
+   */
+  lookup(
+    toolUseId: string,
+  ):
+    | {
+        readonly turnId: string;
+        readonly toolName: string;
+        readonly info: IClaudeToolStartInfo | undefined;
+      }
+    | undefined {
+    const entry = this._entries.get(toolUseId);
+    if (!entry) {
+      return undefined;
+    }
+    return { turnId: entry.turnId, toolName: entry.toolName, info: entry.info };
+  }
 
-	/**
-	 * Drop the entry once the matching `tool_result` has been
-	 * delivered. Bounds the registry's memory across long turns.
-	 */
-	complete(toolUseId: string): void {
-		this._entries.delete(toolUseId);
-	}
+  /**
+   * Drop the entry once the matching `tool_result` has been
+   * delivered. Bounds the registry's memory across long turns.
+   */
+  complete(toolUseId: string): void {
+    this._entries.delete(toolUseId);
+  }
 
-	/**
-	 * Drop any tracking still pending at the end of a turn and warn
-	 * once per orphan. A `tool_use` whose `tool_result` never arrives
-	 * — model misbehavior, transport drop, future cancellation —
-	 * would otherwise survive in the maps for the lifetime of the
-	 * session and accumulate across turns. Called from `mapResult`
-	 * on every `result` envelope.
-	 */
-	clearPending(logService: ILogService): void {
-		if (this._entries.size === 0) {
-			return;
-		}
-		for (const [toolUseId, entry] of this._entries) {
-			logService.warn(`[claudeToolCallRegistry] turn ${entry.turnId} ended with pending tool_use ${toolUseId} (${entry.toolName}); dropping cross-message state`);
-		}
-		this._entries.clear();
-	}
+  /**
+   * Drop any tracking still pending at the end of a turn and warn
+   * once per orphan. A `tool_use` whose `tool_result` never arrives
+   * — model misbehavior, transport drop, future cancellation —
+   * would otherwise survive in the maps for the lifetime of the
+   * session and accumulate across turns. Called from `mapResult`
+   * on every `result` envelope.
+   */
+  clearPending(logService: ILogService): void {
+    if (this._entries.size === 0) {
+      return;
+    }
+    for (const [toolUseId, entry] of this._entries) {
+      logService.warn(
+        `[claudeToolCallRegistry] turn ${entry.turnId} ended with pending tool_use ${toolUseId} (${entry.toolName}); dropping cross-message state`,
+      );
+    }
+    this._entries.clear();
+  }
 }

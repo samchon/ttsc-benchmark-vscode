@@ -3,16 +3,19 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { ChatAgentLocation, ChatModeKind } from '../../../common/constants.js';
-import { ILanguageModelChatMetadata, ILanguageModelChatMetadataAndIdentifier } from '../../../common/languageModels.js';
+import { ChatAgentLocation, ChatModeKind } from "../../../common/constants.js";
+import {
+  ILanguageModelChatMetadata,
+  ILanguageModelChatMetadataAndIdentifier,
+} from "../../../common/languageModels.js";
 
 /**
  * Describes the context needed for model selection decisions.
  */
 interface IModelSelectionContext {
-	readonly location: ChatAgentLocation;
-	readonly currentModeKind: ChatModeKind;
-	readonly sessionType: string | undefined;
+  readonly location: ChatAgentLocation;
+  readonly currentModeKind: ChatModeKind;
+  readonly sessionType: string | undefined;
 }
 
 /**
@@ -24,63 +27,71 @@ interface IModelSelectionContext {
  * the model from the picker and this model-selection flow.
  */
 export function filterModelsForSession(
-	models: ILanguageModelChatMetadataAndIdentifier[],
-	sessionType: string | undefined,
-	currentModeKind: ChatModeKind,
-	location: ChatAgentLocation,
+  models: ILanguageModelChatMetadataAndIdentifier[],
+  sessionType: string | undefined,
+  currentModeKind: ChatModeKind,
+  location: ChatAgentLocation,
 ): ILanguageModelChatMetadataAndIdentifier[] {
-	if (sessionType && sessionType !== 'local' && hasModelsTargetingSession(models, sessionType)) {
-		return models.filter(entry =>
-			entry.metadata?.targetChatSessionType === sessionType &&
-			entry.metadata?.isUserSelectable !== false
-		);
-	}
+  if (
+    sessionType &&
+    sessionType !== "local" &&
+    hasModelsTargetingSession(models, sessionType)
+  ) {
+    return models.filter(
+      (entry) =>
+        entry.metadata?.targetChatSessionType === sessionType &&
+        entry.metadata?.isUserSelectable !== false,
+    );
+  }
 
-	return models.filter(entry =>
-		!entry.metadata?.targetChatSessionType &&
-		entry.metadata?.isUserSelectable !== false &&
-		isModelSupportedForMode(entry, currentModeKind) &&
-		isModelSupportedForInlineChat(entry, location)
-	);
+  return models.filter(
+    (entry) =>
+      !entry.metadata?.targetChatSessionType &&
+      entry.metadata?.isUserSelectable !== false &&
+      isModelSupportedForMode(entry, currentModeKind) &&
+      isModelSupportedForInlineChat(entry, location),
+  );
 }
 
 /**
  * Check if a model is suitable for the current chat mode (e.g., agent mode requires tool calling).
  */
 export function isModelSupportedForMode(
-	model: ILanguageModelChatMetadataAndIdentifier,
-	currentModeKind: ChatModeKind,
+  model: ILanguageModelChatMetadataAndIdentifier,
+  currentModeKind: ChatModeKind,
 ): boolean {
-	if (currentModeKind === ChatModeKind.Agent) {
-		return ILanguageModelChatMetadata.suitableForAgentMode(model.metadata);
-	}
-	return true;
+  if (currentModeKind === ChatModeKind.Agent) {
+    return ILanguageModelChatMetadata.suitableForAgentMode(model.metadata);
+  }
+  return true;
 }
 
 /**
  * Check if a model is suitable for inline chat (editor inline) usage.
  */
 export function isModelSupportedForInlineChat(
-	model: ILanguageModelChatMetadataAndIdentifier,
-	location: ChatAgentLocation,
+  model: ILanguageModelChatMetadataAndIdentifier,
+  location: ChatAgentLocation,
 ): boolean {
-	if (location !== ChatAgentLocation.EditorInline) {
-		return true;
-	}
-	return !!model.metadata.capabilities?.toolCalling;
+  if (location !== ChatAgentLocation.EditorInline) {
+    return true;
+  }
+  return !!model.metadata.capabilities?.toolCalling;
 }
 
 /**
  * Check if any models in the pool target a specific session type.
  */
 export function hasModelsTargetingSession(
-	allModels: ILanguageModelChatMetadataAndIdentifier[],
-	sessionType: string | undefined,
+  allModels: ILanguageModelChatMetadataAndIdentifier[],
+  sessionType: string | undefined,
 ): boolean {
-	if (!sessionType) {
-		return false;
-	}
-	return allModels.some(m => m.metadata.targetChatSessionType === sessionType);
+  if (!sessionType) {
+    return false;
+  }
+  return allModels.some(
+    (m) => m.metadata.targetChatSessionType === sessionType,
+  );
 }
 
 /**
@@ -89,14 +100,14 @@ export function hasModelsTargetingSession(
  * If no models target this session, the model must not be session-specific.
  */
 export function isModelValidForSession(
-	model: ILanguageModelChatMetadataAndIdentifier,
-	allModels: ILanguageModelChatMetadataAndIdentifier[],
-	sessionType: string | undefined,
+  model: ILanguageModelChatMetadataAndIdentifier,
+  allModels: ILanguageModelChatMetadataAndIdentifier[],
+  sessionType: string | undefined,
 ): boolean {
-	if (hasModelsTargetingSession(allModels, sessionType)) {
-		return model.metadata.targetChatSessionType === sessionType;
-	}
-	return !model.metadata.targetChatSessionType;
+  if (hasModelsTargetingSession(allModels, sessionType)) {
+    return model.metadata.targetChatSessionType === sessionType;
+  }
+  return !model.metadata.targetChatSessionType;
 }
 
 /**
@@ -104,10 +115,12 @@ export function isModelValidForSession(
  * Prefers the model marked as default for the location, falls back to the first model.
  */
 export function findDefaultModel(
-	models: ILanguageModelChatMetadataAndIdentifier[],
-	location: ChatAgentLocation,
+  models: ILanguageModelChatMetadataAndIdentifier[],
+  location: ChatAgentLocation,
 ): ILanguageModelChatMetadataAndIdentifier | undefined {
-	return models.find(m => m.metadata.isDefaultForLocation[location]) || models[0];
+  return (
+    models.find((m) => m.metadata.isDefaultForLocation[location]) || models[0]
+  );
 }
 
 /**
@@ -123,21 +136,24 @@ export function findDefaultModel(
  * for users who never explicitly chose a model.
  */
 export function shouldRestorePersistedModel(
-	persistedModelId: string,
-	persistedAsDefault: boolean,
-	availableModels: ILanguageModelChatMetadataAndIdentifier[],
-	location: ChatAgentLocation,
-): { shouldRestore: boolean; model: ILanguageModelChatMetadataAndIdentifier | undefined } {
-	const model = availableModels.find(m => m.identifier === persistedModelId);
-	if (!model) {
-		return { shouldRestore: false, model: undefined };
-	}
+  persistedModelId: string,
+  persistedAsDefault: boolean,
+  availableModels: ILanguageModelChatMetadataAndIdentifier[],
+  location: ChatAgentLocation,
+): {
+  shouldRestore: boolean;
+  model: ILanguageModelChatMetadataAndIdentifier | undefined;
+} {
+  const model = availableModels.find((m) => m.identifier === persistedModelId);
+  if (!model) {
+    return { shouldRestore: false, model: undefined };
+  }
 
-	if (!persistedAsDefault || model.metadata.isDefaultForLocation[location]) {
-		return { shouldRestore: true, model };
-	}
+  if (!persistedAsDefault || model.metadata.isDefaultForLocation[location]) {
+    return { shouldRestore: true, model };
+  }
 
-	return { shouldRestore: false, model };
+  return { shouldRestore: false, model };
 }
 
 /**
@@ -147,36 +163,36 @@ export function shouldRestorePersistedModel(
  * Returns true if the model should be reset to default.
  */
 export function shouldResetModelToDefault(
-	currentModel: ILanguageModelChatMetadataAndIdentifier | undefined,
-	availableModels: ILanguageModelChatMetadataAndIdentifier[],
-	context: IModelSelectionContext,
-	allModels: ILanguageModelChatMetadataAndIdentifier[],
+  currentModel: ILanguageModelChatMetadataAndIdentifier | undefined,
+  availableModels: ILanguageModelChatMetadataAndIdentifier[],
+  context: IModelSelectionContext,
+  allModels: ILanguageModelChatMetadataAndIdentifier[],
 ): boolean {
-	if (!currentModel) {
-		return true;
-	}
+  if (!currentModel) {
+    return true;
+  }
 
-	// Model is no longer in the available list
-	if (!availableModels.some(m => m.identifier === currentModel.identifier)) {
-		return true;
-	}
+  // Model is no longer in the available list
+  if (!availableModels.some((m) => m.identifier === currentModel.identifier)) {
+    return true;
+  }
 
-	// Model not supported for current mode
-	if (!isModelSupportedForMode(currentModel, context.currentModeKind)) {
-		return true;
-	}
+  // Model not supported for current mode
+  if (!isModelSupportedForMode(currentModel, context.currentModeKind)) {
+    return true;
+  }
 
-	// Model not supported for inline chat
-	if (!isModelSupportedForInlineChat(currentModel, context.location)) {
-		return true;
-	}
+  // Model not supported for inline chat
+  if (!isModelSupportedForInlineChat(currentModel, context.location)) {
+    return true;
+  }
 
-	// Model not valid for current session
-	if (!isModelValidForSession(currentModel, allModels, context.sessionType)) {
-		return true;
-	}
+  // Model not valid for current session
+  if (!isModelValidForSession(currentModel, allModels, context.sessionType)) {
+    return true;
+  }
 
-	return false;
+  return false;
 }
 
 /**
@@ -195,33 +211,33 @@ export function shouldResetModelToDefault(
  *   session-pool membership is validated.
  */
 export function resolveModelFromSyncState(
-	stateModel: ILanguageModelChatMetadataAndIdentifier,
-	currentModel: ILanguageModelChatMetadataAndIdentifier | undefined,
-	allModels: ILanguageModelChatMetadataAndIdentifier[],
-	sessionType: string | undefined,
-	context?: IModelSelectionContext,
-): { action: 'keep' | 'apply' | 'default' } {
-	// Already the same model — nothing to do
-	if (currentModel && currentModel.identifier === stateModel.identifier) {
-		return { action: 'keep' };
-	}
+  stateModel: ILanguageModelChatMetadataAndIdentifier,
+  currentModel: ILanguageModelChatMetadataAndIdentifier | undefined,
+  allModels: ILanguageModelChatMetadataAndIdentifier[],
+  sessionType: string | undefined,
+  context?: IModelSelectionContext,
+): { action: "keep" | "apply" | "default" } {
+  // Already the same model — nothing to do
+  if (currentModel && currentModel.identifier === stateModel.identifier) {
+    return { action: "keep" };
+  }
 
-	// Validate the state model belongs to this session's model pool
-	if (!isModelValidForSession(stateModel, allModels, sessionType)) {
-		return { action: 'default' };
-	}
+  // Validate the state model belongs to this session's model pool
+  if (!isModelValidForSession(stateModel, allModels, sessionType)) {
+    return { action: "default" };
+  }
 
-	// When a UI context is available, also validate mode and inline-chat compatibility
-	if (context) {
-		if (!isModelSupportedForMode(stateModel, context.currentModeKind)) {
-			return { action: 'default' };
-		}
-		if (!isModelSupportedForInlineChat(stateModel, context.location)) {
-			return { action: 'default' };
-		}
-	}
+  // When a UI context is available, also validate mode and inline-chat compatibility
+  if (context) {
+    if (!isModelSupportedForMode(stateModel, context.currentModeKind)) {
+      return { action: "default" };
+    }
+    if (!isModelSupportedForInlineChat(stateModel, context.location)) {
+      return { action: "default" };
+    }
+  }
 
-	return { action: 'apply' };
+  return { action: "apply" };
 }
 
 /**
@@ -236,21 +252,22 @@ export function resolveModelFromSyncState(
  *   flickering the picker to empty.
  */
 export function mergeModelsWithCache(
-	liveModels: ILanguageModelChatMetadataAndIdentifier[],
-	cachedModels: ILanguageModelChatMetadataAndIdentifier[],
-	contributedVendors: Set<string>,
-	resolvedVendors?: ReadonlySet<string>,
+  liveModels: ILanguageModelChatMetadataAndIdentifier[],
+  cachedModels: ILanguageModelChatMetadataAndIdentifier[],
+  contributedVendors: Set<string>,
+  resolvedVendors?: ReadonlySet<string>,
 ): ILanguageModelChatMetadataAndIdentifier[] {
-	if (contributedVendors.size === 0 && liveModels.length === 0) {
-		return cachedModels;
-	}
-	const liveVendors = new Set(liveModels.map(m => m.metadata.vendor));
-	const usableCached = cachedModels.filter(m =>
-		contributedVendors.has(m.metadata.vendor) &&
-		!liveVendors.has(m.metadata.vendor) &&
-		!resolvedVendors?.has(m.metadata.vendor)
-	);
-	return [...liveModels, ...usableCached];
+  if (contributedVendors.size === 0 && liveModels.length === 0) {
+    return cachedModels;
+  }
+  const liveVendors = new Set(liveModels.map((m) => m.metadata.vendor));
+  const usableCached = cachedModels.filter(
+    (m) =>
+      contributedVendors.has(m.metadata.vendor) &&
+      !liveVendors.has(m.metadata.vendor) &&
+      !resolvedVendors?.has(m.metadata.vendor),
+  );
+  return [...liveModels, ...usableCached];
 }
 
 /**
@@ -261,13 +278,13 @@ export function mergeModelsWithCache(
  * is no longer in the available models list).
  */
 export function shouldResetOnModelListChange(
-	currentModelId: string | undefined,
-	availableModels: ILanguageModelChatMetadataAndIdentifier[],
+  currentModelId: string | undefined,
+  availableModels: ILanguageModelChatMetadataAndIdentifier[],
 ): boolean {
-	if (!currentModelId) {
-		return true;
-	}
-	return !availableModels.some(m => m.identifier === currentModelId);
+  if (!currentModelId) {
+    return true;
+  }
+  return !availableModels.some((m) => m.identifier === currentModelId);
 }
 
 /**
@@ -280,19 +297,19 @@ export function shouldResetOnModelListChange(
  * restoration.
  */
 export function shouldRestoreLateArrivingModel(
-	persistedModelId: string,
-	persistedAsDefault: boolean,
-	model: ILanguageModelChatMetadataAndIdentifier,
-	location: ChatAgentLocation,
+  persistedModelId: string,
+  persistedAsDefault: boolean,
+  model: ILanguageModelChatMetadataAndIdentifier,
+  location: ChatAgentLocation,
 ): boolean {
-	if (model.metadata.isUserSelectable === false) {
-		return false;
-	}
-	const result = shouldRestorePersistedModel(
-		persistedModelId,
-		persistedAsDefault,
-		[model],
-		location,
-	);
-	return result.shouldRestore;
+  if (model.metadata.isUserSelectable === false) {
+    return false;
+  }
+  const result = shouldRestorePersistedModel(
+    persistedModelId,
+    persistedAsDefault,
+    [model],
+    location,
+  );
+  return result.shouldRestore;
 }

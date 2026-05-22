@@ -3,10 +3,13 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { AhpJsonlLogger } from '../common/ahpJsonlLogger.js';
-import type { AuthenticateParams, IAgentService } from '../common/agentService.js';
+import { AhpJsonlLogger } from "../common/ahpJsonlLogger.js";
+import type {
+  AuthenticateParams,
+  IAgentService,
+} from "../common/agentService.js";
 
-const REDACTED_VALUE = '<redacted>';
+const REDACTED_VALUE = "<redacted>";
 
 /**
  * IAgentService methods that semantically correspond to JSON-RPC requests
@@ -15,24 +18,24 @@ const REDACTED_VALUE = '<redacted>';
  * matching `s2c` response frames.
  */
 const REQUEST_METHODS: ReadonlySet<string> = new Set<keyof IAgentService>([
-	'authenticate',
-	'listSessions',
-	'createSession',
-	'resolveSessionConfig',
-	'sessionConfigCompletions',
-	'completions',
-	'getCompletionTriggerCharacters',
-	'disposeSession',
-	'createTerminal',
-	'disposeTerminal',
-	'shutdown',
-	'subscribe',
-	'resourceList',
-	'resourceRead',
-	'resourceWrite',
-	'resourceCopy',
-	'resourceDelete',
-	'resourceMove',
+  "authenticate",
+  "listSessions",
+  "createSession",
+  "resolveSessionConfig",
+  "sessionConfigCompletions",
+  "completions",
+  "getCompletionTriggerCharacters",
+  "disposeSession",
+  "createTerminal",
+  "disposeTerminal",
+  "shutdown",
+  "subscribe",
+  "resourceList",
+  "resourceRead",
+  "resourceWrite",
+  "resourceCopy",
+  "resourceDelete",
+  "resourceMove",
 ] satisfies (keyof IAgentService)[]);
 
 /**
@@ -41,9 +44,9 @@ const REQUEST_METHODS: ReadonlySet<string> = new Set<keyof IAgentService>([
  * with no id.
  */
 const NOTIFICATION_METHODS: ReadonlySet<string> = new Set<keyof IAgentService>([
-	'unsubscribe',
-	'addSubscriber',
-	'dispatchAction',
+  "unsubscribe",
+  "addSubscriber",
+  "dispatchAction",
 ] satisfies (keyof IAgentService)[]);
 
 /**
@@ -58,74 +61,91 @@ const NOTIFICATION_METHODS: ReadonlySet<string> = new Set<keyof IAgentService>([
  * untouched; their payloads should be logged separately by the caller as
  * `s2c` `action` / `notification` frames.
  */
-export function wrapAgentServiceWithAhpLogging(target: IAgentService, logger: AhpJsonlLogger): IAgentService {
-	let nextId = 1;
-	return new Proxy(target, {
-		get(t, prop, receiver) {
-			const value = Reflect.get(t, prop, receiver);
-			if (typeof prop !== 'string' || typeof value !== 'function') {
-				return value;
-			}
-			const isRequest = REQUEST_METHODS.has(prop);
-			const isNotification = !isRequest && NOTIFICATION_METHODS.has(prop);
-			if (!isRequest && !isNotification) {
-				return value;
-			}
-			const method = prop;
-			return function (this: unknown, ...args: unknown[]) {
-				const logArgs = redactParams(method, args);
-				if (isNotification) {
-					const frame = { jsonrpc: '2.0' as const, method, params: logArgs };
-					logger.log(frame, 'c2s');
-					return value.apply(t, args);
-				}
-				const id = nextId++;
-				const requestFrame = { jsonrpc: '2.0' as const, id, method, params: logArgs };
-				logger.log(requestFrame, 'c2s');
-				const result = value.apply(t, args) as Promise<unknown> | unknown;
-				if (result && typeof (result as Promise<unknown>).then === 'function') {
-					return (result as Promise<unknown>).then(
-						res => {
-							const responseFrame = { jsonrpc: '2.0' as const, id, result: res ?? null };
-							logger.log(responseFrame, 's2c');
-							return res;
-						},
-						err => {
-							const errorFrame = {
-								jsonrpc: '2.0' as const,
-								id,
-								error: {
-									code: -32603,
-									message: err instanceof Error ? err.message : String(err),
-								},
-							};
-							logger.log(errorFrame, 's2c');
-							throw err;
-						},
-					);
-				}
-				return result;
-			};
-		},
-	});
+export function wrapAgentServiceWithAhpLogging(
+  target: IAgentService,
+  logger: AhpJsonlLogger,
+): IAgentService {
+  let nextId = 1;
+  return new Proxy(target, {
+    get(t, prop, receiver) {
+      const value = Reflect.get(t, prop, receiver);
+      if (typeof prop !== "string" || typeof value !== "function") {
+        return value;
+      }
+      const isRequest = REQUEST_METHODS.has(prop);
+      const isNotification = !isRequest && NOTIFICATION_METHODS.has(prop);
+      if (!isRequest && !isNotification) {
+        return value;
+      }
+      const method = prop;
+      return function (this: unknown, ...args: unknown[]) {
+        const logArgs = redactParams(method, args);
+        if (isNotification) {
+          const frame = { jsonrpc: "2.0" as const, method, params: logArgs };
+          logger.log(frame, "c2s");
+          return value.apply(t, args);
+        }
+        const id = nextId++;
+        const requestFrame = {
+          jsonrpc: "2.0" as const,
+          id,
+          method,
+          params: logArgs,
+        };
+        logger.log(requestFrame, "c2s");
+        const result = value.apply(t, args) as Promise<unknown> | unknown;
+        if (result && typeof (result as Promise<unknown>).then === "function") {
+          return (result as Promise<unknown>).then(
+            (res) => {
+              const responseFrame = {
+                jsonrpc: "2.0" as const,
+                id,
+                result: res ?? null,
+              };
+              logger.log(responseFrame, "s2c");
+              return res;
+            },
+            (err) => {
+              const errorFrame = {
+                jsonrpc: "2.0" as const,
+                id,
+                error: {
+                  code: -32603,
+                  message: err instanceof Error ? err.message : String(err),
+                },
+              };
+              logger.log(errorFrame, "s2c");
+              throw err;
+            },
+          );
+        }
+        return result;
+      };
+    },
+  });
 }
 
-function redactParams(method: string, args: readonly unknown[]): readonly unknown[] {
-	if (method !== 'authenticate') {
-		return args;
-	}
-	const [params, ...rest] = args;
-	if (!isAuthenticateParams(params)) {
-		return args;
-	}
-	return [{ ...params, token: REDACTED_VALUE }, ...rest];
+function redactParams(
+  method: string,
+  args: readonly unknown[],
+): readonly unknown[] {
+  if (method !== "authenticate") {
+    return args;
+  }
+  const [params, ...rest] = args;
+  if (!isAuthenticateParams(params)) {
+    return args;
+  }
+  return [{ ...params, token: REDACTED_VALUE }, ...rest];
 }
 
 function isAuthenticateParams(value: unknown): value is AuthenticateParams {
-	return typeof value === 'object'
-		&& value !== null
-		&& 'resource' in value
-		&& 'token' in value
-		&& typeof value.resource === 'string'
-		&& typeof value.token === 'string';
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "resource" in value &&
+    "token" in value &&
+    typeof value.resource === "string" &&
+    typeof value.token === "string"
+  );
 }

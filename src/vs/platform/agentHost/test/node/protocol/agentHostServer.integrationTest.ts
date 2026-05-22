@@ -3,31 +3,37 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { PROTOCOL_VERSION } from '../../../common/state/protocol/version/registry.js';
-import { IServerHandle, startServer, TestProtocolClient } from './testHelpers.js';
+import { PROTOCOL_VERSION } from "../../../common/state/protocol/version/registry.js";
+import {
+  IServerHandle,
+  startServer,
+  TestProtocolClient,
+} from "./testHelpers.js";
 
-suite('Agent Host Server', function () {
+suite("Agent Host Server", function () {
+  let server: IServerHandle;
 
-	let server: IServerHandle;
+  suiteSetup(async function () {
+    this.timeout(15_000);
+    server = await startServer({ quiet: false });
+  });
 
-	suiteSetup(async function () {
-		this.timeout(15_000);
-		server = await startServer({ quiet: false });
-	});
+  suiteTeardown(function () {
+    server.process.kill();
+  });
 
-	suiteTeardown(function () {
-		server.process.kill();
-	});
+  test("starts with production agent services registered", async function () {
+    this.timeout(10_000);
 
-	test('starts with production agent services registered', async function () {
-		this.timeout(10_000);
-
-		const client = new TestProtocolClient(server.port);
-		try {
-			await client.connect();
-			await client.call('initialize', { protocolVersions: [PROTOCOL_VERSION], clientId: 'test-agent-host-server-services' });
-		} finally {
-			client.close();
-		}
-	});
+    const client = new TestProtocolClient(server.port);
+    try {
+      await client.connect();
+      await client.call("initialize", {
+        protocolVersions: [PROTOCOL_VERSION],
+        clientId: "test-agent-host-server-services",
+      });
+    } finally {
+      client.close();
+    }
+  });
 });

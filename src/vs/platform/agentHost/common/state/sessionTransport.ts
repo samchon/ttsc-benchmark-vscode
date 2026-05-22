@@ -10,30 +10,43 @@
 // (ProxyChannel), WebSocket, or stdio. This module defines the contract;
 // concrete implementations live in platform-specific folders.
 
-import { Event } from '../../../../base/common/event.js';
-import { IDisposable } from '../../../../base/common/lifecycle.js';
-import type { ProtocolMessage, AhpServerNotification, JsonRpcNotification, JsonRpcResponse, JsonRpcRequest } from './sessionProtocol.js';
+import { Event } from "../../../../base/common/event.js";
+import { IDisposable } from "../../../../base/common/lifecycle.js";
+import type {
+  ProtocolMessage,
+  AhpServerNotification,
+  JsonRpcNotification,
+  JsonRpcResponse,
+  JsonRpcRequest,
+} from "./sessionProtocol.js";
 
 /**
  * A bidirectional transport for protocol messages. Implementations handle
  * serialization, framing, and connection management.
  */
 export interface IProtocolTransport extends IDisposable {
-	/** Fires when a message is received from the remote end. */
-	readonly onMessage: Event<ProtocolMessage>;
+  /** Fires when a message is received from the remote end. */
+  readonly onMessage: Event<ProtocolMessage>;
 
-	/** Fires when the transport connection closes. */
-	readonly onClose: Event<void>;
+  /** Fires when the transport connection closes. */
+  readonly onClose: Event<void>;
 
-	/**
-	 * Send a message to the remote end.
-	 *
-	 * Accepts:
-	 * - `ProtocolMessage` — fully-typed client↔server messages.
-	 * - `AhpServerNotification` — server→client notifications.
-	 * - `JsonRpcResponse` — dynamically-constructed success/error responses.
-	 */
-	send(message: ProtocolMessage | AhpServerNotification | JsonRpcNotification | JsonRpcResponse | JsonRpcRequest): void;
+  /**
+   * Send a message to the remote end.
+   *
+   * Accepts:
+   * - `ProtocolMessage` — fully-typed client↔server messages.
+   * - `AhpServerNotification` — server→client notifications.
+   * - `JsonRpcResponse` — dynamically-constructed success/error responses.
+   */
+  send(
+    message:
+      | ProtocolMessage
+      | AhpServerNotification
+      | JsonRpcNotification
+      | JsonRpcResponse
+      | JsonRpcRequest,
+  ): void;
 }
 
 /**
@@ -41,13 +54,15 @@ export interface IProtocolTransport extends IDisposable {
  * before messages can be exchanged.
  */
 export interface IClientTransport extends IProtocolTransport {
-	/** Establish the underlying connection (e.g. open a WebSocket). */
-	connect(): Promise<void>;
+  /** Establish the underlying connection (e.g. open a WebSocket). */
+  connect(): Promise<void>;
 }
 
 /** Type guard for transports that require an explicit connection step. */
-export function isClientTransport(transport: IProtocolTransport): transport is IClientTransport {
-	return typeof (transport as IClientTransport).connect === 'function';
+export function isClientTransport(
+  transport: IProtocolTransport,
+): transport is IClientTransport {
+  return typeof (transport as IClientTransport).connect === "function";
 }
 
 /**
@@ -55,9 +70,9 @@ export function isClientTransport(transport: IProtocolTransport): transport is I
  * Each connected client gets its own {@link IProtocolTransport}.
  */
 export interface IProtocolServer extends IDisposable {
-	/** Fires when a new client connects. */
-	readonly onConnection: Event<IProtocolTransport>;
+  /** Fires when a new client connects. */
+  readonly onConnection: Event<IProtocolTransport>;
 
-	/** The port or address the server is listening on. */
-	readonly address: string | undefined;
+  /** The port or address the server is listening on. */
+  readonly address: string | undefined;
 }

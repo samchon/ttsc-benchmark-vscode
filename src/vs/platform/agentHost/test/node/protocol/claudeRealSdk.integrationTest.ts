@@ -23,11 +23,14 @@
  * `@github/copilot` CLI.
  */
 
-import { existsSync } from 'fs';
-import { join } from '../../../../../base/common/path.js';
-import { defineSharedRealSdkTests, type IRealSdkProviderConfig } from './realSdkTestHelpers.js';
+import { existsSync } from "fs";
+import { join } from "../../../../../base/common/path.js";
+import {
+  defineSharedRealSdkTests,
+  type IRealSdkProviderConfig,
+} from "./realSdkTestHelpers.js";
 
-const REAL_SDK_ENABLED = process.env['AGENT_HOST_REAL_SDK'] === '1';
+const REAL_SDK_ENABLED = process.env["AGENT_HOST_REAL_SDK"] === "1";
 
 /**
  * Resolve the path of the locally installed `@anthropic-ai/claude-agent-sdk`
@@ -46,8 +49,13 @@ const REAL_SDK_ENABLED = process.env['AGENT_HOST_REAL_SDK'] === '1';
  * skip-if-not-found path surfaces the missing dep.
  */
 function resolveClaudeSdkPath(): string | undefined {
-	const candidate = join(process.cwd(), 'node_modules', '@anthropic-ai', 'claude-agent-sdk');
-	return existsSync(candidate) ? candidate : undefined;
+  const candidate = join(
+    process.cwd(),
+    "node_modules",
+    "@anthropic-ai",
+    "claude-agent-sdk",
+  );
+  return existsSync(candidate) ? candidate : undefined;
 }
 
 // Resolve lazily: if the suite isn't opted in, skip the filesystem probe so a
@@ -55,22 +63,22 @@ function resolveClaudeSdkPath(): string | undefined {
 const CLAUDE_SDK_PATH = REAL_SDK_ENABLED ? resolveClaudeSdkPath() : undefined;
 
 const CLAUDE_CONFIG: IRealSdkProviderConfig = {
-	suiteTitle: 'Protocol WebSocket — Real Claude SDK',
-	provider: 'claude',
-	scheme: 'claude',
-	shellToolName: 'Bash',
-	subagentToolNames: ['Task', 'Agent'],
-	exitPlanModeToolName: 'ExitPlanMode',
-	enabled: REAL_SDK_ENABLED && !!CLAUDE_SDK_PATH,
-	claudeSdkPath: CLAUDE_SDK_PATH,
-	// Claude has not landed worktree isolation yet (deferred to Phase 12).
-	// The shared suite skips that test when the flag is false.
-	supportsWorktreeIsolation: false,
-	supportsSubagents: true,
-	// Plan mode is wired (`ExitPlanMode` interactive tool exists) but the
-	// shared test's Copilot-flavoured prompt doesn't reliably drive Claude
-	// to invoke it. TODO: rework the prompt for Claude conventions.
-	supportsPlanMode: false,
+  suiteTitle: "Protocol WebSocket — Real Claude SDK",
+  provider: "claude",
+  scheme: "claude",
+  shellToolName: "Bash",
+  subagentToolNames: ["Task", "Agent"],
+  exitPlanModeToolName: "ExitPlanMode",
+  enabled: REAL_SDK_ENABLED && !!CLAUDE_SDK_PATH,
+  claudeSdkPath: CLAUDE_SDK_PATH,
+  // Claude has not landed worktree isolation yet (deferred to Phase 12).
+  // The shared suite skips that test when the flag is false.
+  supportsWorktreeIsolation: false,
+  supportsSubagents: true,
+  // Plan mode is wired (`ExitPlanMode` interactive tool exists) but the
+  // shared test's Copilot-flavoured prompt doesn't reliably drive Claude
+  // to invoke it. TODO: rework the prompt for Claude conventions.
+  supportsPlanMode: false,
 };
 
 defineSharedRealSdkTests(CLAUDE_CONFIG);

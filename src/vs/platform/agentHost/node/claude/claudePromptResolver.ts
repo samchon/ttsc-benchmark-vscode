@@ -3,9 +3,12 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type Anthropic from '@anthropic-ai/sdk';
-import { URI } from '../../../../base/common/uri.js';
-import { MessageAttachmentKind, type MessageAttachment } from '../../common/state/protocol/state.js';
+import type Anthropic from "@anthropic-ai/sdk";
+import { URI } from "../../../../base/common/uri.js";
+import {
+  MessageAttachmentKind,
+  type MessageAttachment,
+} from "../../common/state/protocol/state.js";
 
 /**
  * Build the {@link Anthropic.ContentBlockParam}[] payload for an
@@ -27,53 +30,58 @@ import { MessageAttachmentKind, type MessageAttachment } from '../../common/stat
  * Claude path does not have a place to consume them.
  */
 export function resolvePromptToContentBlocks(
-	prompt: string,
-	attachments?: readonly MessageAttachment[],
+  prompt: string,
+  attachments?: readonly MessageAttachment[],
 ): Anthropic.ContentBlockParam[] {
-	const blocks: Anthropic.ContentBlockParam[] = [{ type: 'text', text: prompt }];
-	if (!attachments?.length) {
-		return blocks;
-	}
-	const refLines: string[] = [];
-	const simpleBlocks: string[] = [];
-	for (const att of attachments) {
-		if (att.type === MessageAttachmentKind.Simple) {
-			if (att.modelRepresentation) {
-				simpleBlocks.push(att.modelRepresentation);
-			}
-			continue;
-		}
-		if (att.type !== MessageAttachmentKind.Resource) {
-			continue;
-		}
-		const uri = URI.parse(att.uri);
-		if (att.displayKind === 'selection') {
-			const startLine = att.selection ? `:${att.selection.range.start.line + 1}` : '';
-			refLines.push(`- ${uriToString(uri)}${startLine}`);
-		} else {
-			refLines.push(`- ${uriToString(uri)}`);
-		}
-	}
-	if (simpleBlocks.length > 0) {
-		blocks.push({
-			type: 'text',
-			text: simpleBlocks.join('\n\n'),
-		});
-	}
-	if (refLines.length === 0) {
-		return blocks;
-	}
-	blocks.push({
-		type: 'text',
-		text: '<system-reminder>\nThe user provided the following references:\n' +
-			refLines.join('\n') +
-			'\n\nIMPORTANT: this context may or may not be relevant to your tasks. ' +
-			'You should not respond to this context unless it is highly relevant to your task.\n' +
-			'</system-reminder>',
-	});
-	return blocks;
+  const blocks: Anthropic.ContentBlockParam[] = [
+    { type: "text", text: prompt },
+  ];
+  if (!attachments?.length) {
+    return blocks;
+  }
+  const refLines: string[] = [];
+  const simpleBlocks: string[] = [];
+  for (const att of attachments) {
+    if (att.type === MessageAttachmentKind.Simple) {
+      if (att.modelRepresentation) {
+        simpleBlocks.push(att.modelRepresentation);
+      }
+      continue;
+    }
+    if (att.type !== MessageAttachmentKind.Resource) {
+      continue;
+    }
+    const uri = URI.parse(att.uri);
+    if (att.displayKind === "selection") {
+      const startLine = att.selection
+        ? `:${att.selection.range.start.line + 1}`
+        : "";
+      refLines.push(`- ${uriToString(uri)}${startLine}`);
+    } else {
+      refLines.push(`- ${uriToString(uri)}`);
+    }
+  }
+  if (simpleBlocks.length > 0) {
+    blocks.push({
+      type: "text",
+      text: simpleBlocks.join("\n\n"),
+    });
+  }
+  if (refLines.length === 0) {
+    return blocks;
+  }
+  blocks.push({
+    type: "text",
+    text:
+      "<system-reminder>\nThe user provided the following references:\n" +
+      refLines.join("\n") +
+      "\n\nIMPORTANT: this context may or may not be relevant to your tasks. " +
+      "You should not respond to this context unless it is highly relevant to your task.\n" +
+      "</system-reminder>",
+  });
+  return blocks;
 }
 
 function uriToString(uri: URI): string {
-	return uri.scheme === 'file' ? uri.fsPath : uri.toString();
+  return uri.scheme === "file" ? uri.fsPath : uri.toString();
 }

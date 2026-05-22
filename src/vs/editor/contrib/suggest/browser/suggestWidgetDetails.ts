@@ -3,493 +3,634 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import * as dom from '../../../../base/browser/dom.js';
-import { ResizableHTMLElement } from '../../../../base/browser/ui/resizable/resizable.js';
-import { DomScrollableElement } from '../../../../base/browser/ui/scrollbar/scrollableElement.js';
-import { Codicon } from '../../../../base/common/codicons.js';
-import { Emitter, Event } from '../../../../base/common/event.js';
-import { MarkdownString } from '../../../../base/common/htmlContent.js';
-import { DisposableStore } from '../../../../base/common/lifecycle.js';
-import { ThemeIcon } from '../../../../base/common/themables.js';
-import * as nls from '../../../../nls.js';
-import { isHighContrast } from '../../../../platform/theme/common/theme.js';
-import { IThemeService } from '../../../../platform/theme/common/themeService.js';
-import { ICodeEditor, IOverlayWidget, IOverlayWidgetPosition } from '../../../browser/editorBrowser.js';
-import { IMarkdownRendererService } from '../../../../platform/markdown/browser/markdownRenderer.js';
-import { EditorOption } from '../../../common/config/editorOptions.js';
-import { CompletionItem } from './suggest.js';
+import * as dom from "../../../../base/browser/dom.js";
+import { ResizableHTMLElement } from "../../../../base/browser/ui/resizable/resizable.js";
+import { DomScrollableElement } from "../../../../base/browser/ui/scrollbar/scrollableElement.js";
+import { Codicon } from "../../../../base/common/codicons.js";
+import { Emitter, Event } from "../../../../base/common/event.js";
+import { MarkdownString } from "../../../../base/common/htmlContent.js";
+import { DisposableStore } from "../../../../base/common/lifecycle.js";
+import { ThemeIcon } from "../../../../base/common/themables.js";
+import * as nls from "../../../../nls.js";
+import { isHighContrast } from "../../../../platform/theme/common/theme.js";
+import { IThemeService } from "../../../../platform/theme/common/themeService.js";
+import {
+  ICodeEditor,
+  IOverlayWidget,
+  IOverlayWidgetPosition,
+} from "../../../browser/editorBrowser.js";
+import { IMarkdownRendererService } from "../../../../platform/markdown/browser/markdownRenderer.js";
+import { EditorOption } from "../../../common/config/editorOptions.js";
+import { CompletionItem } from "./suggest.js";
 
-export function canExpandCompletionItem(item: CompletionItem | undefined): boolean {
-	return !!item && Boolean(item.completion.documentation || item.completion.detail && item.completion.detail !== item.completion.label);
+export function canExpandCompletionItem(
+  item: CompletionItem | undefined,
+): boolean {
+  return (
+    !!item &&
+    Boolean(
+      item.completion.documentation ||
+      (item.completion.detail &&
+        item.completion.detail !== item.completion.label),
+    )
+  );
 }
 
 export class SuggestDetailsWidget {
+  readonly domNode: HTMLDivElement;
 
-	readonly domNode: HTMLDivElement;
+  private readonly _onDidClose = new Emitter<void>();
+  readonly onDidClose: Event<void> = this._onDidClose.event;
 
-	private readonly _onDidClose = new Emitter<void>();
-	readonly onDidClose: Event<void> = this._onDidClose.event;
+  private readonly _onDidChangeContents = new Emitter<this>();
+  readonly onDidChangeContents: Event<this> = this._onDidChangeContents.event;
 
-	private readonly _onDidChangeContents = new Emitter<this>();
-	readonly onDidChangeContents: Event<this> = this._onDidChangeContents.event;
+  private readonly _close: HTMLElement;
+  private readonly _scrollbar: DomScrollableElement;
+  private readonly _body: HTMLElement;
+  private readonly _header: HTMLElement;
+  private readonly _type: HTMLElement;
+  private readonly _docs: HTMLElement;
+  private readonly _disposables = new DisposableStore();
 
-	private readonly _close: HTMLElement;
-	private readonly _scrollbar: DomScrollableElement;
-	private readonly _body: HTMLElement;
-	private readonly _header: HTMLElement;
-	private readonly _type: HTMLElement;
-	private readonly _docs: HTMLElement;
-	private readonly _disposables = new DisposableStore();
+  private readonly _renderDisposeable = new DisposableStore();
+  private _size = new dom.Dimension(330, 0);
 
-	private readonly _renderDisposeable = new DisposableStore();
-	private _size = new dom.Dimension(330, 0);
+  constructor(
+    private readonly _editor: ICodeEditor,
+    @IThemeService private readonly _themeService: IThemeService,
+    @IMarkdownRendererService
+    private readonly _markdownRendererService: IMarkdownRendererService,
+  ) {
+    this.domNode = dom.$(".suggest-details");
+    this.domNode.classList.add("no-docs");
 
-	constructor(
-		private readonly _editor: ICodeEditor,
-		@IThemeService private readonly _themeService: IThemeService,
-		@IMarkdownRendererService private readonly _markdownRendererService: IMarkdownRendererService,
-	) {
-		this.domNode = dom.$('.suggest-details');
-		this.domNode.classList.add('no-docs');
+    this._body = dom.$(".body");
 
+    this._scrollbar = new DomScrollableElement(this._body, {
+      alwaysConsumeMouseWheel: true,
+    });
+    dom.append(this.domNode, this._scrollbar.getDomNode());
+    this._disposables.add(this._scrollbar);
 
-		this._body = dom.$('.body');
+    this._header = dom.append(this._body, dom.$(".header"));
+    this._close = dom.append(
+      this._header,
+      dom.$("span" + ThemeIcon.asCSSSelector(Codicon.close)),
+    );
+    this._close.title = nls.localize("details.close", "Close");
+    this._close.role = "button";
+    this._close.tabIndex = -1;
+    this._type = dom.append(this._header, dom.$("p.type"));
 
-		this._scrollbar = new DomScrollableElement(this._body, {
-			alwaysConsumeMouseWheel: true,
-		});
-		dom.append(this.domNode, this._scrollbar.getDomNode());
-		this._disposables.add(this._scrollbar);
+    this._docs = dom.append(this._body, dom.$("p.docs"));
 
-		this._header = dom.append(this._body, dom.$('.header'));
-		this._close = dom.append(this._header, dom.$('span' + ThemeIcon.asCSSSelector(Codicon.close)));
-		this._close.title = nls.localize('details.close', "Close");
-		this._close.role = 'button';
-		this._close.tabIndex = -1;
-		this._type = dom.append(this._header, dom.$('p.type'));
+    this._configureFont();
 
-		this._docs = dom.append(this._body, dom.$('p.docs'));
+    this._disposables.add(
+      this._editor.onDidChangeConfiguration((e) => {
+        if (e.hasChanged(EditorOption.fontInfo)) {
+          this._configureFont();
+        }
+      }),
+    );
+  }
 
-		this._configureFont();
+  dispose(): void {
+    this._disposables.dispose();
+    this._renderDisposeable.dispose();
+    this._onDidClose.dispose();
+    this._onDidChangeContents.dispose();
+  }
 
-		this._disposables.add(this._editor.onDidChangeConfiguration(e => {
-			if (e.hasChanged(EditorOption.fontInfo)) {
-				this._configureFont();
-			}
-		}));
-	}
+  private _configureFont(): void {
+    const options = this._editor.getOptions();
+    const fontInfo = options.get(EditorOption.fontInfo);
+    const fontFamily = fontInfo.getMassagedFontFamily();
+    const fontSize =
+      options.get(EditorOption.suggestFontSize) || fontInfo.fontSize;
+    const lineHeight =
+      options.get(EditorOption.suggestLineHeight) || fontInfo.lineHeight;
+    const fontWeight = fontInfo.fontWeight;
+    const fontSizePx = `${fontSize}px`;
+    const lineHeightPx = `${lineHeight}px`;
 
-	dispose(): void {
-		this._disposables.dispose();
-		this._renderDisposeable.dispose();
-		this._onDidClose.dispose();
-		this._onDidChangeContents.dispose();
-	}
+    this.domNode.style.fontSize = fontSizePx;
+    this.domNode.style.lineHeight = `${lineHeight / fontSize}`;
+    this.domNode.style.fontWeight = fontWeight;
+    this.domNode.style.fontFeatureSettings = fontInfo.fontFeatureSettings;
+    this._type.style.fontFamily = fontFamily;
+    this._close.style.height = lineHeightPx;
+    this._close.style.width = lineHeightPx;
+  }
 
-	private _configureFont(): void {
-		const options = this._editor.getOptions();
-		const fontInfo = options.get(EditorOption.fontInfo);
-		const fontFamily = fontInfo.getMassagedFontFamily();
-		const fontSize = options.get(EditorOption.suggestFontSize) || fontInfo.fontSize;
-		const lineHeight = options.get(EditorOption.suggestLineHeight) || fontInfo.lineHeight;
-		const fontWeight = fontInfo.fontWeight;
-		const fontSizePx = `${fontSize}px`;
-		const lineHeightPx = `${lineHeight}px`;
+  getLayoutInfo() {
+    const lineHeight =
+      this._editor.getOption(EditorOption.suggestLineHeight) ||
+      this._editor.getOption(EditorOption.fontInfo).lineHeight;
+    const borderWidth = isHighContrast(this._themeService.getColorTheme().type)
+      ? 2
+      : 1;
+    const borderHeight = borderWidth * 2;
+    return {
+      lineHeight,
+      borderWidth,
+      borderHeight,
+      verticalPadding: 22,
+      horizontalPadding: 14,
+    };
+  }
 
-		this.domNode.style.fontSize = fontSizePx;
-		this.domNode.style.lineHeight = `${lineHeight / fontSize}`;
-		this.domNode.style.fontWeight = fontWeight;
-		this.domNode.style.fontFeatureSettings = fontInfo.fontFeatureSettings;
-		this._type.style.fontFamily = fontFamily;
-		this._close.style.height = lineHeightPx;
-		this._close.style.width = lineHeightPx;
-	}
+  renderLoading(): void {
+    this._type.textContent = nls.localize("loading", "Loading...");
+    this._docs.textContent = "";
+    this.domNode.classList.remove("no-docs", "no-type");
+    this.layout(this.size.width, this.getLayoutInfo().lineHeight * 2);
+    this._onDidChangeContents.fire(this);
+  }
 
-	getLayoutInfo() {
-		const lineHeight = this._editor.getOption(EditorOption.suggestLineHeight) || this._editor.getOption(EditorOption.fontInfo).lineHeight;
-		const borderWidth = isHighContrast(this._themeService.getColorTheme().type) ? 2 : 1;
-		const borderHeight = borderWidth * 2;
-		return {
-			lineHeight,
-			borderWidth,
-			borderHeight,
-			verticalPadding: 22,
-			horizontalPadding: 14
-		};
-	}
+  renderItem(item: CompletionItem, explainMode: boolean): void {
+    this._renderDisposeable.clear();
 
+    let { detail, documentation } = item.completion;
 
-	renderLoading(): void {
-		this._type.textContent = nls.localize('loading', "Loading...");
-		this._docs.textContent = '';
-		this.domNode.classList.remove('no-docs', 'no-type');
-		this.layout(this.size.width, this.getLayoutInfo().lineHeight * 2);
-		this._onDidChangeContents.fire(this);
-	}
+    if (explainMode) {
+      let md = "";
+      md += `score: ${item.score[0]}\n`;
+      md += `prefix: ${item.word ?? "(no prefix)"}\n`;
+      md += `word: ${item.completion.filterText ? item.completion.filterText + " (filterText)" : item.textLabel}\n`;
+      md += `distance: ${item.distance} (localityBonus-setting)\n`;
+      md += `index: ${item.idx}, based on ${(item.completion.sortText && `sortText: "${item.completion.sortText}"`) || "label"}\n`;
+      md += `commit_chars: ${item.completion.commitCharacters?.join("")}\n`;
+      documentation = new MarkdownString().appendCodeblock("empty", md);
+      detail = `Provider: ${item.provider._debugDisplayName}`;
+    }
 
-	renderItem(item: CompletionItem, explainMode: boolean): void {
-		this._renderDisposeable.clear();
+    if (!explainMode && !canExpandCompletionItem(item)) {
+      this.clearContents();
+      return;
+    }
 
-		let { detail, documentation } = item.completion;
+    this.domNode.classList.remove("no-docs", "no-type");
 
-		if (explainMode) {
-			let md = '';
-			md += `score: ${item.score[0]}\n`;
-			md += `prefix: ${item.word ?? '(no prefix)'}\n`;
-			md += `word: ${item.completion.filterText ? item.completion.filterText + ' (filterText)' : item.textLabel}\n`;
-			md += `distance: ${item.distance} (localityBonus-setting)\n`;
-			md += `index: ${item.idx}, based on ${item.completion.sortText && `sortText: "${item.completion.sortText}"` || 'label'}\n`;
-			md += `commit_chars: ${item.completion.commitCharacters?.join('')}\n`;
-			documentation = new MarkdownString().appendCodeblock('empty', md);
-			detail = `Provider: ${item.provider._debugDisplayName}`;
-		}
+    // --- details
 
-		if (!explainMode && !canExpandCompletionItem(item)) {
-			this.clearContents();
-			return;
-		}
+    if (detail) {
+      const cappedDetail =
+        detail.length > 100000 ? `${detail.substr(0, 100000)}…` : detail;
+      this._type.textContent = cappedDetail;
+      this._type.title = cappedDetail;
+      dom.show(this._type);
+      this._type.classList.toggle(
+        "auto-wrap",
+        !/\r?\n^\s+/gim.test(cappedDetail),
+      );
+    } else {
+      dom.clearNode(this._type);
+      this._type.title = "";
+      dom.hide(this._type);
+      this.domNode.classList.add("no-type");
+    }
 
-		this.domNode.classList.remove('no-docs', 'no-type');
+    // --- documentation
+    dom.clearNode(this._docs);
+    if (typeof documentation === "string") {
+      this._docs.classList.remove("markdown-docs");
+      this._docs.textContent = documentation;
+    } else if (documentation) {
+      this._docs.classList.add("markdown-docs");
+      dom.clearNode(this._docs);
+      const renderedContents = this._markdownRendererService.render(
+        documentation,
+        {
+          context: this._editor,
+          asyncRenderCallback: () => {
+            this.layout(
+              this._size.width,
+              this._type.clientHeight + this._docs.clientHeight,
+            );
+            this._onDidChangeContents.fire(this);
+          },
+        },
+      );
+      this._docs.appendChild(renderedContents.element);
+      this._renderDisposeable.add(renderedContents);
+    }
 
-		// --- details
+    this.domNode.classList.toggle(
+      "detail-and-doc",
+      !!detail && !!documentation,
+    );
 
-		if (detail) {
-			const cappedDetail = detail.length > 100000 ? `${detail.substr(0, 100000)}…` : detail;
-			this._type.textContent = cappedDetail;
-			this._type.title = cappedDetail;
-			dom.show(this._type);
-			this._type.classList.toggle('auto-wrap', !/\r?\n^\s+/gmi.test(cappedDetail));
-		} else {
-			dom.clearNode(this._type);
-			this._type.title = '';
-			dom.hide(this._type);
-			this.domNode.classList.add('no-type');
-		}
+    this.domNode.style.userSelect = "text";
+    this.domNode.tabIndex = -1;
 
-		// --- documentation
-		dom.clearNode(this._docs);
-		if (typeof documentation === 'string') {
-			this._docs.classList.remove('markdown-docs');
-			this._docs.textContent = documentation;
+    this._close.onmousedown = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+    };
+    this._close.onclick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      this._onDidClose.fire();
+    };
 
-		} else if (documentation) {
-			this._docs.classList.add('markdown-docs');
-			dom.clearNode(this._docs);
-			const renderedContents = this._markdownRendererService.render(documentation, {
-				context: this._editor,
-				asyncRenderCallback: () => {
-					this.layout(this._size.width, this._type.clientHeight + this._docs.clientHeight);
-					this._onDidChangeContents.fire(this);
-				}
-			});
-			this._docs.appendChild(renderedContents.element);
-			this._renderDisposeable.add(renderedContents);
-		}
+    this._body.scrollTop = 0;
 
-		this.domNode.classList.toggle('detail-and-doc', !!detail && !!documentation);
+    this.layout(
+      this._size.width,
+      this._type.clientHeight + this._docs.clientHeight,
+    );
+    this._onDidChangeContents.fire(this);
+  }
 
-		this.domNode.style.userSelect = 'text';
-		this.domNode.tabIndex = -1;
+  clearContents() {
+    this.domNode.classList.add("no-docs");
+    this._type.textContent = "";
+    this._docs.textContent = "";
+  }
 
-		this._close.onmousedown = e => {
-			e.preventDefault();
-			e.stopPropagation();
-		};
-		this._close.onclick = e => {
-			e.preventDefault();
-			e.stopPropagation();
-			this._onDidClose.fire();
-		};
+  get isEmpty(): boolean {
+    return this.domNode.classList.contains("no-docs");
+  }
 
-		this._body.scrollTop = 0;
+  get size() {
+    return this._size;
+  }
 
-		this.layout(this._size.width, this._type.clientHeight + this._docs.clientHeight);
-		this._onDidChangeContents.fire(this);
-	}
+  layout(width: number, height: number): void {
+    const newSize = new dom.Dimension(width, height);
+    if (!dom.Dimension.equals(newSize, this._size)) {
+      this._size = newSize;
+      dom.size(this.domNode, width, height);
+    }
+    this._scrollbar.scanDomNode();
+  }
 
-	clearContents() {
-		this.domNode.classList.add('no-docs');
-		this._type.textContent = '';
-		this._docs.textContent = '';
-	}
+  scrollDown(much = 8): void {
+    this._body.scrollTop += much;
+  }
 
-	get isEmpty(): boolean {
-		return this.domNode.classList.contains('no-docs');
-	}
+  scrollUp(much = 8): void {
+    this._body.scrollTop -= much;
+  }
 
-	get size() {
-		return this._size;
-	}
+  scrollTop(): void {
+    this._body.scrollTop = 0;
+  }
 
-	layout(width: number, height: number): void {
-		const newSize = new dom.Dimension(width, height);
-		if (!dom.Dimension.equals(newSize, this._size)) {
-			this._size = newSize;
-			dom.size(this.domNode, width, height);
-		}
-		this._scrollbar.scanDomNode();
-	}
+  scrollBottom(): void {
+    this._body.scrollTop = this._body.scrollHeight;
+  }
 
-	scrollDown(much = 8): void {
-		this._body.scrollTop += much;
-	}
+  pageDown(): void {
+    this.scrollDown(80);
+  }
 
-	scrollUp(much = 8): void {
-		this._body.scrollTop -= much;
-	}
+  pageUp(): void {
+    this.scrollUp(80);
+  }
 
-	scrollTop(): void {
-		this._body.scrollTop = 0;
-	}
-
-	scrollBottom(): void {
-		this._body.scrollTop = this._body.scrollHeight;
-	}
-
-	pageDown(): void {
-		this.scrollDown(80);
-	}
-
-	pageUp(): void {
-		this.scrollUp(80);
-	}
-
-	focus() {
-		this.domNode.focus();
-	}
+  focus() {
+    this.domNode.focus();
+  }
 }
 
 interface TopLeftPosition {
-	top: number;
-	left: number;
+  top: number;
+  left: number;
 }
 
 export class SuggestDetailsOverlay implements IOverlayWidget {
+  readonly allowEditorOverflow = true;
 
-	readonly allowEditorOverflow = true;
+  private readonly _disposables = new DisposableStore();
+  private readonly _resizable: ResizableHTMLElement;
 
-	private readonly _disposables = new DisposableStore();
-	private readonly _resizable: ResizableHTMLElement;
+  private _added: boolean = false;
+  private _anchorBox?: dom.IDomNodePagePosition;
+  private _preferAlignAtTop: boolean = true;
+  private _userSize?: dom.Dimension;
+  private _topLeft?: TopLeftPosition;
 
-	private _added: boolean = false;
-	private _anchorBox?: dom.IDomNodePagePosition;
-	private _preferAlignAtTop: boolean = true;
-	private _userSize?: dom.Dimension;
-	private _topLeft?: TopLeftPosition;
+  constructor(
+    readonly widget: SuggestDetailsWidget,
+    private readonly _editor: ICodeEditor,
+  ) {
+    this._resizable = new ResizableHTMLElement();
+    this._resizable.domNode.classList.add("suggest-details-container");
+    this._resizable.domNode.appendChild(widget.domNode);
+    this._resizable.enableSashes(false, true, true, false);
 
-	constructor(
-		readonly widget: SuggestDetailsWidget,
-		private readonly _editor: ICodeEditor
-	) {
+    let topLeftNow: TopLeftPosition | undefined;
+    let sizeNow: dom.Dimension | undefined;
+    let deltaTop: number = 0;
+    let deltaLeft: number = 0;
+    this._disposables.add(
+      this._resizable.onDidWillResize(() => {
+        topLeftNow = this._topLeft;
+        sizeNow = this._resizable.size;
+      }),
+    );
 
-		this._resizable = new ResizableHTMLElement();
-		this._resizable.domNode.classList.add('suggest-details-container');
-		this._resizable.domNode.appendChild(widget.domNode);
-		this._resizable.enableSashes(false, true, true, false);
+    this._disposables.add(
+      this._resizable.onDidResize((e) => {
+        if (topLeftNow && sizeNow) {
+          this.widget.layout(e.dimension.width, e.dimension.height);
 
-		let topLeftNow: TopLeftPosition | undefined;
-		let sizeNow: dom.Dimension | undefined;
-		let deltaTop: number = 0;
-		let deltaLeft: number = 0;
-		this._disposables.add(this._resizable.onDidWillResize(() => {
-			topLeftNow = this._topLeft;
-			sizeNow = this._resizable.size;
-		}));
+          let updateTopLeft = false;
+          if (e.west) {
+            deltaLeft = sizeNow.width - e.dimension.width;
+            updateTopLeft = true;
+          }
+          if (e.north) {
+            deltaTop = sizeNow.height - e.dimension.height;
+            updateTopLeft = true;
+          }
+          if (updateTopLeft) {
+            this._applyTopLeft({
+              top: topLeftNow.top + deltaTop,
+              left: topLeftNow.left + deltaLeft,
+            });
+          }
+        }
+        if (e.done) {
+          topLeftNow = undefined;
+          sizeNow = undefined;
+          deltaTop = 0;
+          deltaLeft = 0;
+          this._userSize = e.dimension;
+        }
+      }),
+    );
 
-		this._disposables.add(this._resizable.onDidResize(e => {
-			if (topLeftNow && sizeNow) {
-				this.widget.layout(e.dimension.width, e.dimension.height);
+    this._disposables.add(
+      this.widget.onDidChangeContents(() => {
+        if (this._anchorBox) {
+          this._placeAtAnchor(
+            this._anchorBox,
+            this._userSize ?? this.widget.size,
+            this._preferAlignAtTop,
+          );
+        }
+      }),
+    );
+  }
 
-				let updateTopLeft = false;
-				if (e.west) {
-					deltaLeft = sizeNow.width - e.dimension.width;
-					updateTopLeft = true;
-				}
-				if (e.north) {
-					deltaTop = sizeNow.height - e.dimension.height;
-					updateTopLeft = true;
-				}
-				if (updateTopLeft) {
-					this._applyTopLeft({
-						top: topLeftNow.top + deltaTop,
-						left: topLeftNow.left + deltaLeft,
-					});
-				}
-			}
-			if (e.done) {
-				topLeftNow = undefined;
-				sizeNow = undefined;
-				deltaTop = 0;
-				deltaLeft = 0;
-				this._userSize = e.dimension;
-			}
-		}));
+  dispose(): void {
+    this._resizable.dispose();
+    this._disposables.dispose();
+    this.hide();
+  }
 
-		this._disposables.add(this.widget.onDidChangeContents(() => {
-			if (this._anchorBox) {
-				this._placeAtAnchor(this._anchorBox, this._userSize ?? this.widget.size, this._preferAlignAtTop);
-			}
-		}));
-	}
+  getId(): string {
+    return "suggest.details";
+  }
 
-	dispose(): void {
-		this._resizable.dispose();
-		this._disposables.dispose();
-		this.hide();
-	}
+  getDomNode(): HTMLElement {
+    return this._resizable.domNode;
+  }
 
-	getId(): string {
-		return 'suggest.details';
-	}
+  getPosition(): IOverlayWidgetPosition | null {
+    return this._topLeft ? { preference: this._topLeft } : null;
+  }
 
-	getDomNode(): HTMLElement {
-		return this._resizable.domNode;
-	}
+  show(): void {
+    if (!this._added) {
+      this._editor.addOverlayWidget(this);
+      this._added = true;
+    }
+  }
 
-	getPosition(): IOverlayWidgetPosition | null {
-		return this._topLeft ? { preference: this._topLeft } : null;
-	}
+  hide(sessionEnded: boolean = false): void {
+    this._resizable.clearSashHoverState();
 
-	show(): void {
-		if (!this._added) {
-			this._editor.addOverlayWidget(this);
-			this._added = true;
-		}
-	}
+    if (this._added) {
+      this._editor.removeOverlayWidget(this);
+      this._added = false;
+      this._anchorBox = undefined;
+      this._topLeft = undefined;
+    }
+    if (sessionEnded) {
+      this._userSize = undefined;
+      this.widget.clearContents();
+    }
+  }
 
-	hide(sessionEnded: boolean = false): void {
-		this._resizable.clearSashHoverState();
+  placeAtAnchor(anchor: HTMLElement, preferAlignAtTop: boolean) {
+    const anchorBox = anchor.getBoundingClientRect();
+    this._anchorBox = anchorBox;
+    this._preferAlignAtTop = preferAlignAtTop;
+    this._placeAtAnchor(
+      this._anchorBox,
+      this._userSize ?? this.widget.size,
+      preferAlignAtTop,
+    );
+  }
 
-		if (this._added) {
-			this._editor.removeOverlayWidget(this);
-			this._added = false;
-			this._anchorBox = undefined;
-			this._topLeft = undefined;
-		}
-		if (sessionEnded) {
-			this._userSize = undefined;
-			this.widget.clearContents();
-		}
-	}
+  _placeAtAnchor(
+    anchorBox: dom.IDomNodePagePosition,
+    size: dom.Dimension,
+    preferAlignAtTop: boolean,
+  ) {
+    const bodyBox = dom.getClientArea(this.getDomNode().ownerDocument.body);
 
-	placeAtAnchor(anchor: HTMLElement, preferAlignAtTop: boolean) {
-		const anchorBox = anchor.getBoundingClientRect();
-		this._anchorBox = anchorBox;
-		this._preferAlignAtTop = preferAlignAtTop;
-		this._placeAtAnchor(this._anchorBox, this._userSize ?? this.widget.size, preferAlignAtTop);
-	}
+    const info = this.widget.getLayoutInfo();
 
-	_placeAtAnchor(anchorBox: dom.IDomNodePagePosition, size: dom.Dimension, preferAlignAtTop: boolean) {
-		const bodyBox = dom.getClientArea(this.getDomNode().ownerDocument.body);
+    const defaultMinSize = new dom.Dimension(220, 2 * info.lineHeight);
+    const defaultTop = anchorBox.top;
 
-		const info = this.widget.getLayoutInfo();
+    type Placement = {
+      top: number;
+      left: number;
+      fit: number;
+      maxSizeTop: dom.Dimension;
+      maxSizeBottom: dom.Dimension;
+      minSize: dom.Dimension;
+    };
 
-		const defaultMinSize = new dom.Dimension(220, 2 * info.lineHeight);
-		const defaultTop = anchorBox.top;
+    // EAST
+    const eastPlacement: Placement = (function () {
+      const width =
+        bodyBox.width -
+        (anchorBox.left +
+          anchorBox.width +
+          info.borderWidth +
+          info.horizontalPadding);
+      const left = -info.borderWidth + anchorBox.left + anchorBox.width;
+      const maxSizeTop = new dom.Dimension(
+        width,
+        bodyBox.height -
+          anchorBox.top -
+          info.borderHeight -
+          info.verticalPadding,
+      );
+      const maxSizeBottom = maxSizeTop.with(
+        undefined,
+        anchorBox.top +
+          anchorBox.height -
+          info.borderHeight -
+          info.verticalPadding,
+      );
+      return {
+        top: defaultTop,
+        left,
+        fit: width - size.width,
+        maxSizeTop,
+        maxSizeBottom,
+        minSize: defaultMinSize.with(Math.min(width, defaultMinSize.width)),
+      };
+    })();
 
-		type Placement = { top: number; left: number; fit: number; maxSizeTop: dom.Dimension; maxSizeBottom: dom.Dimension; minSize: dom.Dimension };
+    // WEST
+    const westPlacement: Placement = (function () {
+      const width = anchorBox.left - info.borderWidth - info.horizontalPadding;
+      const left = Math.max(
+        info.horizontalPadding,
+        anchorBox.left - size.width - info.borderWidth,
+      );
+      const maxSizeTop = new dom.Dimension(
+        width,
+        bodyBox.height -
+          anchorBox.top -
+          info.borderHeight -
+          info.verticalPadding,
+      );
+      const maxSizeBottom = maxSizeTop.with(
+        undefined,
+        anchorBox.top +
+          anchorBox.height -
+          info.borderHeight -
+          info.verticalPadding,
+      );
+      return {
+        top: defaultTop,
+        left,
+        fit: width - size.width,
+        maxSizeTop,
+        maxSizeBottom,
+        minSize: defaultMinSize.with(Math.min(width, defaultMinSize.width)),
+      };
+    })();
 
-		// EAST
-		const eastPlacement: Placement = (function () {
-			const width = bodyBox.width - (anchorBox.left + anchorBox.width + info.borderWidth + info.horizontalPadding);
-			const left = -info.borderWidth + anchorBox.left + anchorBox.width;
-			const maxSizeTop = new dom.Dimension(width, bodyBox.height - anchorBox.top - info.borderHeight - info.verticalPadding);
-			const maxSizeBottom = maxSizeTop.with(undefined, anchorBox.top + anchorBox.height - info.borderHeight - info.verticalPadding);
-			return { top: defaultTop, left, fit: width - size.width, maxSizeTop, maxSizeBottom, minSize: defaultMinSize.with(Math.min(width, defaultMinSize.width)) };
-		})();
+    // SOUTH
+    const southPlacement: Placement = (function () {
+      const left = anchorBox.left;
+      const top = -info.borderWidth + anchorBox.top + anchorBox.height;
+      const maxSizeBottom = new dom.Dimension(
+        anchorBox.width - info.borderHeight,
+        bodyBox.height -
+          anchorBox.top -
+          anchorBox.height -
+          info.verticalPadding,
+      );
+      return {
+        top,
+        left,
+        fit: maxSizeBottom.height - size.height,
+        maxSizeBottom,
+        maxSizeTop: maxSizeBottom,
+        minSize: defaultMinSize.with(maxSizeBottom.width),
+      };
+    })();
 
-		// WEST
-		const westPlacement: Placement = (function () {
-			const width = anchorBox.left - info.borderWidth - info.horizontalPadding;
-			const left = Math.max(info.horizontalPadding, anchorBox.left - size.width - info.borderWidth);
-			const maxSizeTop = new dom.Dimension(width, bodyBox.height - anchorBox.top - info.borderHeight - info.verticalPadding);
-			const maxSizeBottom = maxSizeTop.with(undefined, anchorBox.top + anchorBox.height - info.borderHeight - info.verticalPadding);
-			return { top: defaultTop, left, fit: width - size.width, maxSizeTop, maxSizeBottom, minSize: defaultMinSize.with(Math.min(width, defaultMinSize.width)) };
-		})();
+    // NORTH
+    const northPlacement: Placement = (function () {
+      const left = anchorBox.left;
+      const maxSizeTop = new dom.Dimension(
+        anchorBox.width - info.borderHeight,
+        anchorBox.top - info.verticalPadding,
+      );
+      const top = Math.max(info.verticalPadding, anchorBox.top - size.height);
+      return {
+        top,
+        left,
+        fit: maxSizeTop.height - size.height,
+        maxSizeTop,
+        maxSizeBottom: maxSizeTop,
+        minSize: defaultMinSize.with(maxSizeTop.width),
+      };
+    })();
 
-		// SOUTH
-		const southPlacement: Placement = (function () {
-			const left = anchorBox.left;
-			const top = -info.borderWidth + anchorBox.top + anchorBox.height;
-			const maxSizeBottom = new dom.Dimension(anchorBox.width - info.borderHeight, bodyBox.height - anchorBox.top - anchorBox.height - info.verticalPadding);
-			return { top, left, fit: maxSizeBottom.height - size.height, maxSizeBottom, maxSizeTop: maxSizeBottom, minSize: defaultMinSize.with(maxSizeBottom.width) };
-		})();
+    // take first placement that fits or the first with "least bad" fit
+    // when the suggest widget is rendering above the cursor (preferAlignAtTop=false), prefer NORTH over SOUTH
+    const verticalPlacement = preferAlignAtTop
+      ? southPlacement
+      : northPlacement;
+    const placements = [eastPlacement, westPlacement, verticalPlacement];
+    const placement =
+      placements.find((p) => p.fit >= 0) ??
+      placements.sort((a, b) => b.fit - a.fit)[0];
 
-		// NORTH
-		const northPlacement: Placement = (function () {
-			const left = anchorBox.left;
-			const maxSizeTop = new dom.Dimension(anchorBox.width - info.borderHeight, anchorBox.top - info.verticalPadding);
-			const top = Math.max(info.verticalPadding, anchorBox.top - size.height);
-			return { top, left, fit: maxSizeTop.height - size.height, maxSizeTop, maxSizeBottom: maxSizeTop, minSize: defaultMinSize.with(maxSizeTop.width) };
-		})();
+    // top/bottom placement
+    const bottom = anchorBox.top + anchorBox.height - info.borderHeight;
+    let alignAtTop: boolean;
+    let height = size.height;
+    const maxHeight = Math.max(
+      placement.maxSizeTop.height,
+      placement.maxSizeBottom.height,
+    );
+    if (height > maxHeight) {
+      height = maxHeight;
+    }
+    let maxSize: dom.Dimension;
+    if (preferAlignAtTop) {
+      if (height <= placement.maxSizeTop.height) {
+        alignAtTop = true;
+        maxSize = placement.maxSizeTop;
+      } else {
+        alignAtTop = false;
+        maxSize = placement.maxSizeBottom;
+      }
+    } else {
+      if (height <= placement.maxSizeBottom.height) {
+        alignAtTop = false;
+        maxSize = placement.maxSizeBottom;
+      } else {
+        alignAtTop = true;
+        maxSize = placement.maxSizeTop;
+      }
+    }
 
-		// take first placement that fits or the first with "least bad" fit
-		// when the suggest widget is rendering above the cursor (preferAlignAtTop=false), prefer NORTH over SOUTH
-		const verticalPlacement = preferAlignAtTop ? southPlacement : northPlacement;
-		const placements = [eastPlacement, westPlacement, verticalPlacement];
-		const placement = placements.find(p => p.fit >= 0) ?? placements.sort((a, b) => b.fit - a.fit)[0];
+    let { top, left } = placement;
+    if (placement === northPlacement) {
+      // For NORTH placement, position the details above the anchor
+      top = anchorBox.top - height + info.borderWidth;
+    } else if (!alignAtTop && height > anchorBox.height) {
+      top = bottom - height;
+    }
+    const editorDomNode = this._editor.getDomNode();
+    if (editorDomNode) {
+      // get bounding rectangle of the suggest widget relative to the editor
+      const editorBoundingBox = editorDomNode.getBoundingClientRect();
+      top -= editorBoundingBox.top;
+      left -= editorBoundingBox.left;
+    }
+    this._applyTopLeft({ left, top });
 
-		// top/bottom placement
-		const bottom = anchorBox.top + anchorBox.height - info.borderHeight;
-		let alignAtTop: boolean;
-		let height = size.height;
-		const maxHeight = Math.max(placement.maxSizeTop.height, placement.maxSizeBottom.height);
-		if (height > maxHeight) {
-			height = maxHeight;
-		}
-		let maxSize: dom.Dimension;
-		if (preferAlignAtTop) {
-			if (height <= placement.maxSizeTop.height) {
-				alignAtTop = true;
-				maxSize = placement.maxSizeTop;
-			} else {
-				alignAtTop = false;
-				maxSize = placement.maxSizeBottom;
-			}
-		} else {
-			if (height <= placement.maxSizeBottom.height) {
-				alignAtTop = false;
-				maxSize = placement.maxSizeBottom;
-			} else {
-				alignAtTop = true;
-				maxSize = placement.maxSizeTop;
-			}
-		}
+    // enableSashes(north, east, south, west)
+    // For NORTH placement: enable north sash (resize upward from top), disable south (can't resize into the anchor)
+    // Also enable west sash for horizontal resizing, consistent with SOUTH placement
+    // For SOUTH placement and EAST/WEST placements: use existing logic based on alignAtTop
+    if (placement === northPlacement) {
+      this._resizable.enableSashes(true, false, false, true);
+    } else {
+      this._resizable.enableSashes(
+        !alignAtTop,
+        placement === eastPlacement,
+        alignAtTop,
+        placement !== eastPlacement,
+      );
+    }
 
-		let { top, left } = placement;
-		if (placement === northPlacement) {
-			// For NORTH placement, position the details above the anchor
-			top = anchorBox.top - height + info.borderWidth;
-		} else if (!alignAtTop && height > anchorBox.height) {
-			top = bottom - height;
-		}
-		const editorDomNode = this._editor.getDomNode();
-		if (editorDomNode) {
-			// get bounding rectangle of the suggest widget relative to the editor
-			const editorBoundingBox = editorDomNode.getBoundingClientRect();
-			top -= editorBoundingBox.top;
-			left -= editorBoundingBox.left;
-		}
-		this._applyTopLeft({ left, top });
+    this._resizable.minSize = placement.minSize;
+    this._resizable.maxSize = maxSize;
+    this._resizable.layout(height, Math.min(maxSize.width, size.width));
+    this.widget.layout(this._resizable.size.width, this._resizable.size.height);
+  }
 
-		// enableSashes(north, east, south, west)
-		// For NORTH placement: enable north sash (resize upward from top), disable south (can't resize into the anchor)
-		// Also enable west sash for horizontal resizing, consistent with SOUTH placement
-		// For SOUTH placement and EAST/WEST placements: use existing logic based on alignAtTop
-		if (placement === northPlacement) {
-			this._resizable.enableSashes(true, false, false, true);
-		} else {
-			this._resizable.enableSashes(!alignAtTop, placement === eastPlacement, alignAtTop, placement !== eastPlacement);
-		}
-
-		this._resizable.minSize = placement.minSize;
-		this._resizable.maxSize = maxSize;
-		this._resizable.layout(height, Math.min(maxSize.width, size.width));
-		this.widget.layout(this._resizable.size.width, this._resizable.size.height);
-	}
-
-	private _applyTopLeft(topLeft: TopLeftPosition): void {
-		this._topLeft = topLeft;
-		this._editor.layoutOverlayWidget(this);
-	}
+  private _applyTopLeft(topLeft: TopLeftPosition): void {
+    this._topLeft = topLeft;
+    this._editor.layoutOverlayWidget(this);
+  }
 }

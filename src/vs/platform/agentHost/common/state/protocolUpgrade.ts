@@ -3,7 +3,7 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { UnsupportedProtocolVersionErrorData } from './protocol/errors.js';
+import type { UnsupportedProtocolVersionErrorData } from "./protocol/errors.js";
 
 /**
  * Name of the JSON-RPC method that, when invoked on an agent host spawned
@@ -15,7 +15,7 @@ import type { UnsupportedProtocolVersionErrorData } from './protocol/errors.js';
  * client can offer an "Update server" action without hard-coding the method
  * name on the renderer side.
  */
-export const VSCODE_UPGRADE_METHOD = '_vscodeUpgrade' as const;
+export const VSCODE_UPGRADE_METHOD = "_vscodeUpgrade" as const;
 
 /**
  * Status payload returned by the {@link VSCODE_UPGRADE_METHOD} RPC. The
@@ -24,31 +24,31 @@ export const VSCODE_UPGRADE_METHOD = '_vscodeUpgrade' as const;
  * "already on the latest version" vs "upgrade scheduled, please reconnect").
  */
 export interface IVscodeUpgradeResult {
-	/** Whether the CLI accepted the request without an internal error. */
-	readonly ok: boolean;
-	/** Whether the running server is older than the latest known release. */
-	readonly upgradeNeeded?: boolean;
-	/**
-	 * Whether the CLI committed to actually performing the upgrade. When
-	 * `true`, the client SHOULD reconnect after at least
-	 * {@link restartDelayMs} milliseconds; the existing transport will be
-	 * torn down by the CLI.
-	 */
-	readonly upgradeStarted?: boolean;
-	/** Commit of the currently running server, or `null` if no server is running. */
-	readonly runningCommit?: string | null;
-	/** Latest known release commit at the time of the call. */
-	readonly latestCommit?: string;
-	/**
-	 * Milliseconds the client should wait before attempting to reconnect.
-	 * The CLI deliberately delays the kill+restart so this HTTP response
-	 * can drain back through the proxy first; reconnecting immediately
-	 * would land on the still-running pre-upgrade server. Populated only
-	 * when {@link upgradeStarted} is `true`.
-	 */
-	readonly restartDelayMs?: number;
-	/** Human-readable error when {@link ok} is `false`. */
-	readonly error?: string;
+  /** Whether the CLI accepted the request without an internal error. */
+  readonly ok: boolean;
+  /** Whether the running server is older than the latest known release. */
+  readonly upgradeNeeded?: boolean;
+  /**
+   * Whether the CLI committed to actually performing the upgrade. When
+   * `true`, the client SHOULD reconnect after at least
+   * {@link restartDelayMs} milliseconds; the existing transport will be
+   * torn down by the CLI.
+   */
+  readonly upgradeStarted?: boolean;
+  /** Commit of the currently running server, or `null` if no server is running. */
+  readonly runningCommit?: string | null;
+  /** Latest known release commit at the time of the call. */
+  readonly latestCommit?: string;
+  /**
+   * Milliseconds the client should wait before attempting to reconnect.
+   * The CLI deliberately delays the kill+restart so this HTTP response
+   * can drain back through the proxy first; reconnecting immediately
+   * would land on the still-running pre-upgrade server. Populated only
+   * when {@link upgradeStarted} is `true`.
+   */
+  readonly restartDelayMs?: number;
+  /** Human-readable error when {@link ok} is `false`. */
+  readonly error?: string;
 }
 
 /**
@@ -62,11 +62,11 @@ export interface IVscodeUpgradeResult {
  * shape of the error.
  */
 export interface UnsupportedProtocolVersionErrorMeta {
-	/**
-	 * JSON-RPC method name the client MAY invoke on the same transport to
-	 * ask the server to upgrade itself. Currently always {@link VSCODE_UPGRADE_METHOD}.
-	 */
-	readonly vscodeUpgradeMethod?: string;
+  /**
+   * JSON-RPC method name the client MAY invoke on the same transport to
+   * ask the server to upgrade itself. Currently always {@link VSCODE_UPGRADE_METHOD}.
+   */
+  readonly vscodeUpgradeMethod?: string;
 }
 
 /**
@@ -78,5 +78,5 @@ export interface UnsupportedProtocolVersionErrorMeta {
  * simply won't set it.
  */
 export interface UnsupportedProtocolVersionErrorDataEx extends UnsupportedProtocolVersionErrorData {
-	readonly _meta?: UnsupportedProtocolVersionErrorMeta;
+  readonly _meta?: UnsupportedProtocolVersionErrorMeta;
 }

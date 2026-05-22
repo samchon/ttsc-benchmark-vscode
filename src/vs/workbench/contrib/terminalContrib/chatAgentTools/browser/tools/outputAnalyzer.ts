@@ -4,12 +4,12 @@
  *--------------------------------------------------------------------------------------------*/
 
 export interface IOutputAnalyzerOptions {
-	readonly exitCode: number | undefined;
-	readonly exitResult: string;
-	readonly commandLine: string;
-	readonly isSandboxWrapped: boolean;
+  readonly exitCode: number | undefined;
+  readonly exitResult: string;
+  readonly commandLine: string;
+  readonly isSandboxWrapped: boolean;
 }
 
 export interface IOutputAnalyzer {
-	analyze(options: IOutputAnalyzerOptions): Promise<string | undefined>;
+  analyze(options: IOutputAnalyzerOptions): Promise<string | undefined>;
 }

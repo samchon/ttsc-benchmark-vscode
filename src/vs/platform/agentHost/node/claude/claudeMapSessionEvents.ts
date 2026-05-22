@@ -3,18 +3,39 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { SDKMessage } from '@anthropic-ai/claude-agent-sdk';
-import type { URI } from '../../../../base/common/uri.js';
-import { LogLevel, type ILogService } from '../../../log/common/log.js';
-import type { AgentSignal } from '../../common/agentService.js';
-import { ActionType } from '../../common/state/sessionActions.js';
-import { ResponsePartKind, ToolResultContentType, type ToolResultContent, type ToolResultFileEditContent } from '../../common/state/sessionState.js';
-import { buildTopLevelSubagentReadyAction, emitInnerAssistantSignals, mapSubagentSystemMessage, SUBAGENT_SPAWNING_TOOL_NAMES, tagWithParent } from './claudeSubagentSignals.js';
-import type { SubagentRegistry } from './claudeSubagentRegistry.js';
-import { stripClientToolNamePrefix, hasClientToolNamePrefix } from './clientTools/claudeClientToolMcpServer.js';
-import { buildClaudeToolMeta, getClaudePastTenseMessage, getClaudeToolDisplayName } from './claudeToolDisplay.js';
-import { ClaudeToolCallRegistry } from './claudeToolCallRegistry.js';
-import { ToolCallConfirmationReason, type StringOrMarkdown } from '../../common/state/protocol/state.js';
+import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk";
+import type { URI } from "../../../../base/common/uri.js";
+import { LogLevel, type ILogService } from "../../../log/common/log.js";
+import type { AgentSignal } from "../../common/agentService.js";
+import { ActionType } from "../../common/state/sessionActions.js";
+import {
+  ResponsePartKind,
+  ToolResultContentType,
+  type ToolResultContent,
+  type ToolResultFileEditContent,
+} from "../../common/state/sessionState.js";
+import {
+  buildTopLevelSubagentReadyAction,
+  emitInnerAssistantSignals,
+  mapSubagentSystemMessage,
+  SUBAGENT_SPAWNING_TOOL_NAMES,
+  tagWithParent,
+} from "./claudeSubagentSignals.js";
+import type { SubagentRegistry } from "./claudeSubagentRegistry.js";
+import {
+  stripClientToolNamePrefix,
+  hasClientToolNamePrefix,
+} from "./clientTools/claudeClientToolMcpServer.js";
+import {
+  buildClaudeToolMeta,
+  getClaudePastTenseMessage,
+  getClaudeToolDisplayName,
+} from "./claudeToolDisplay.js";
+import { ClaudeToolCallRegistry } from "./claudeToolCallRegistry.js";
+import {
+  ToolCallConfirmationReason,
+  type StringOrMarkdown,
+} from "../../common/state/protocol/state.js";
 
 /**
  * Cross-call state for {@link mapSDKMessageToAgentSignals}. One instance
@@ -45,140 +66,157 @@ import { ToolCallConfirmationReason, type StringOrMarkdown } from '../../common/
  * lifecycle invariants live behind named methods.
  */
 export class ClaudeMapperState {
-	private readonly _activeToolBlocks = new Map<number, { toolUseId: string; toolName: string }>();
-	/**
-	 * Phase 8.5 — cross-message tool-call attribution + input
-	 * accumulation + computed start-info, encapsulated as its own
-	 * collaborator class so it can be unit-tested independently.
-	 * Public so mapper functions can call its lifecycle methods
-	 * directly without forwarding through this class.
-	 */
-	readonly toolCalls = new ClaudeToolCallRegistry();
-	private _currentMessageId: string | undefined;
+  private readonly _activeToolBlocks = new Map<
+    number,
+    { toolUseId: string; toolName: string }
+  >();
+  /**
+   * Phase 8.5 — cross-message tool-call attribution + input
+   * accumulation + computed start-info, encapsulated as its own
+   * collaborator class so it can be unit-tested independently.
+   * Public so mapper functions can call its lifecycle methods
+   * directly without forwarding through this class.
+   */
+  readonly toolCalls = new ClaudeToolCallRegistry();
+  private _currentMessageId: string | undefined;
 
-	/**
-	 * Phase 8 — file-edit content pre-staged by
-	 * `ClaudeAgentSession._observeUserMessage` and consumed by
-	 * {@link mapUserMessage} when the matching `tool_result` arrives.
-	 * Keyed by SDK `tool_use_id`. The session's `_processMessages` loop
-	 * awaits the after-snapshot before invoking the synchronous mapper,
-	 * so by the time `takeFileEdit` is called the entry is always
-	 * populated for tracked file-edit tools.
-	 */
-	private readonly _completedFileEdits = new Map<string, ToolResultFileEditContent>();
+  /**
+   * Phase 8 — file-edit content pre-staged by
+   * `ClaudeAgentSession._observeUserMessage` and consumed by
+   * {@link mapUserMessage} when the matching `tool_result` arrives.
+   * Keyed by SDK `tool_use_id`. The session's `_processMessages` loop
+   * awaits the after-snapshot before invoking the synchronous mapper,
+   * so by the time `takeFileEdit` is called the entry is always
+   * populated for tracked file-edit tools.
+   */
+  private readonly _completedFileEdits = new Map<
+    string,
+    ToolResultFileEditContent
+  >();
 
-	/**
-	 * Reset per-message state. Called on `message_start`. Cross-message
-	 * tool-call tracking is deliberately NOT cleared here — the
-	 * `tool_result` for a `tool_use` arrives in a later message.
-	 */
-	resetMessage(messageId: string): void {
-		this._activeToolBlocks.clear();
-		this._currentMessageId = messageId;
-	}
+  /**
+   * Reset per-message state. Called on `message_start`. Cross-message
+   * tool-call tracking is deliberately NOT cleared here — the
+   * `tool_result` for a `tool_use` arrives in a later message.
+   */
+  resetMessage(messageId: string): void {
+    this._activeToolBlocks.clear();
+    this._currentMessageId = messageId;
+  }
 
-	getCurrentMessageId(): string | undefined {
-		return this._currentMessageId;
-	}
+  getCurrentMessageId(): string | undefined {
+    return this._currentMessageId;
+  }
 
-	/**
-	 * Open a tool block at the given content-block index. Seeds both
-	 * scopes; the per-message map gets drained on `content_block_stop`,
-	 * the cross-message maps survive until the matching `tool_result`.
-	 */
-	startToolBlock(index: number, toolUseId: string, toolName: string, turnId: string): void {
-		this._activeToolBlocks.set(index, { toolUseId, toolName });
-		this.toolCalls.begin(toolUseId, toolName, turnId);
-	}
+  /**
+   * Open a tool block at the given content-block index. Seeds both
+   * scopes; the per-message map gets drained on `content_block_stop`,
+   * the cross-message maps survive until the matching `tool_result`.
+   */
+  startToolBlock(
+    index: number,
+    toolUseId: string,
+    toolName: string,
+    turnId: string,
+  ): void {
+    this._activeToolBlocks.set(index, { toolUseId, toolName });
+    this.toolCalls.begin(toolUseId, toolName, turnId);
+  }
 
-	getActiveToolBlock(index: number): { toolUseId: string; toolName: string } | undefined {
-		return this._activeToolBlocks.get(index);
-	}
+  getActiveToolBlock(
+    index: number,
+  ): { toolUseId: string; toolName: string } | undefined {
+    return this._activeToolBlocks.get(index);
+  }
 
-	endToolBlock(index: number): void {
-		this._activeToolBlocks.delete(index);
-	}
+  endToolBlock(index: number): void {
+    this._activeToolBlocks.delete(index);
+  }
 
-	/**
-	 * Phase 8.5 — forward an `input_json_delta.partial_json` chunk
-	 * to the registry. Resolves the index → `tool_use_id` mapping
-	 * locally (the registry is keyed by id, not by index) and is a
-	 * no-op when the index is unknown.
-	 */
-	appendToolBlockInputDelta(index: number, partialJson: string): void {
-		const tracked = this._activeToolBlocks.get(index);
-		if (!tracked) {
-			return;
-		}
-		this.toolCalls.appendInputDelta(tracked.toolUseId, partialJson);
-	}
+  /**
+   * Phase 8.5 — forward an `input_json_delta.partial_json` chunk
+   * to the registry. Resolves the index → `tool_use_id` mapping
+   * locally (the registry is keyed by id, not by index) and is a
+   * no-op when the index is unknown.
+   */
+  appendToolBlockInputDelta(index: number, partialJson: string): void {
+    const tracked = this._activeToolBlocks.get(index);
+    if (!tracked) {
+      return;
+    }
+    this.toolCalls.appendInputDelta(tracked.toolUseId, partialJson);
+  }
 
-	/**
-	 * Phase 8.5 — forward the `content_block_stop` signal to the
-	 * registry, which parses the buffer and stashes the computed
-	 * start-info.
-	 */
-	finalizeToolBlock(index: number): void {
-		const tracked = this._activeToolBlocks.get(index);
-		if (!tracked) {
-			return;
-		}
-		this.toolCalls.finalize(tracked.toolUseId);
-	}
+  /**
+   * Phase 8.5 — forward the `content_block_stop` signal to the
+   * registry, which parses the buffer and stashes the computed
+   * start-info.
+   */
+  finalizeToolBlock(index: number): void {
+    const tracked = this._activeToolBlocks.get(index);
+    if (!tracked) {
+      return;
+    }
+    this.toolCalls.finalize(tracked.toolUseId);
+  }
 
-	/**
-	 * Cross-message lookup for `tool_result` handling. Returns
-	 * `undefined` if the `tool_use_id` is unknown (defense-in-depth
-	 * against transport drift / replay).
-	 */
-	lookupToolCall(toolUseId: string): { turnId: string; toolName: string } | undefined {
-		const entry = this.toolCalls.lookup(toolUseId);
-		return entry ? { turnId: entry.turnId, toolName: entry.toolName } : undefined;
-	}
+  /**
+   * Cross-message lookup for `tool_result` handling. Returns
+   * `undefined` if the `tool_use_id` is unknown (defense-in-depth
+   * against transport drift / replay).
+   */
+  lookupToolCall(
+    toolUseId: string,
+  ): { turnId: string; toolName: string } | undefined {
+    const entry = this.toolCalls.lookup(toolUseId);
+    return entry
+      ? { turnId: entry.turnId, toolName: entry.toolName }
+      : undefined;
+  }
 
-	/** Drain cross-message tracking once a `tool_result` is delivered. */
-	completeToolCall(toolUseId: string): void {
-		this.toolCalls.complete(toolUseId);
-	}
+  /** Drain cross-message tracking once a `tool_result` is delivered. */
+  completeToolCall(toolUseId: string): void {
+    this.toolCalls.complete(toolUseId);
+  }
 
-	/**
-	 * Phase 8 — stash a {@link ToolResultFileEditContent} produced by
-	 * `ClaudeAgentSession._observeUserMessage` so the synchronous mapper
-	 * can append it to the matching `SessionToolCallComplete` action.
-	 */
-	cacheFileEdit(toolUseId: string, content: ToolResultFileEditContent): void {
-		this._completedFileEdits.set(toolUseId, content);
-	}
+  /**
+   * Phase 8 — stash a {@link ToolResultFileEditContent} produced by
+   * `ClaudeAgentSession._observeUserMessage` so the synchronous mapper
+   * can append it to the matching `SessionToolCallComplete` action.
+   */
+  cacheFileEdit(toolUseId: string, content: ToolResultFileEditContent): void {
+    this._completedFileEdits.set(toolUseId, content);
+  }
 
-	/**
-	 * Phase 8 — consume and remove the cached file edit for this
-	 * `tool_use_id`. Returns `undefined` for non-file-edit tools or for
-	 * file-edit tools where snapshotting was skipped (e.g. denied before
-	 * the SDK ran the tool, or no actual file change occurred).
-	 */
-	takeFileEdit(toolUseId: string): ToolResultFileEditContent | undefined {
-		const content = this._completedFileEdits.get(toolUseId);
-		if (content) {
-			this._completedFileEdits.delete(toolUseId);
-		}
-		return content;
-	}
+  /**
+   * Phase 8 — consume and remove the cached file edit for this
+   * `tool_use_id`. Returns `undefined` for non-file-edit tools or for
+   * file-edit tools where snapshotting was skipped (e.g. denied before
+   * the SDK ran the tool, or no actual file change occurred).
+   */
+  takeFileEdit(toolUseId: string): ToolResultFileEditContent | undefined {
+    const content = this._completedFileEdits.get(toolUseId);
+    if (content) {
+      this._completedFileEdits.delete(toolUseId);
+    }
+    return content;
+  }
 
-	/**
-	 * Drop any cross-message tracking that is still pending at the end
-	 * of a turn. A `tool_use` whose `tool_result` never arrives — model
-	 * misbehavior, transport drop, future cancellation — would otherwise
-	 * survive in the maps for the lifetime of the session and accumulate
-	 * across turns. Called from {@link mapResult} on every `result`
-	 * envelope; warns once per orphan to surface the protocol break.
-	 *
-	 * Phase 12 subagent state lives on {@link SubagentRegistry}, not
-	 * here; the mapper drives that drain via
-	 * `registry.drainForegroundSpawns()` from {@link mapResult}.
-	 */
-	clearPendingToolCalls(logService: ILogService): void {
-		this.toolCalls.clearPending(logService);
-	}
+  /**
+   * Drop any cross-message tracking that is still pending at the end
+   * of a turn. A `tool_use` whose `tool_result` never arrives — model
+   * misbehavior, transport drop, future cancellation — would otherwise
+   * survive in the maps for the lifetime of the session and accumulate
+   * across turns. Called from {@link mapResult} on every `result`
+   * envelope; warns once per orphan to surface the protocol break.
+   *
+   * Phase 12 subagent state lives on {@link SubagentRegistry}, not
+   * here; the mapper drives that drain via
+   * `registry.drainForegroundSpawns()` from {@link mapResult}.
+   */
+  clearPendingToolCalls(logService: ILogService): void {
+    this.toolCalls.clearPending(logService);
+  }
 }
 
 /**
@@ -212,53 +250,75 @@ export class ClaudeMapperState {
  * invariant holds by construction.
  */
 export function mapSDKMessageToAgentSignals(
-	message: SDKMessage,
-	session: URI,
-	turnId: string,
-	state: ClaudeMapperState,
-	logService: ILogService,
-	registry: SubagentRegistry,
-	clientId?: string,
+  message: SDKMessage,
+  session: URI,
+  turnId: string,
+  state: ClaudeMapperState,
+  logService: ILogService,
+  registry: SubagentRegistry,
+  clientId?: string,
 ): AgentSignal[] {
-	if (logService.getLevel() <= LogLevel.Trace) {
-		try {
-			const snippet = JSON.stringify(message, (k, v) => typeof v === 'string' && v.length > 200 ? v.slice(0, 200) + '…' : v);
-			logService.trace(`[claudeMapSessionEvents] SDK message type=${message.type}: ${snippet?.slice(0, 2000) ?? '<unserializable>'}`);
-		} catch {
-			logService.trace(`[claudeMapSessionEvents] SDK message type=${message.type} (unserializable)`);
-		}
-	}
-	switch (message.type) {
-		case 'stream_event':
-			return tagWithParent(
-				mapStreamEvent(message.event, session, turnId, state, logService, message.parent_tool_use_id, registry, clientId),
-				session,
-				message.parent_tool_use_id,
-				registry,
-			);
-		case 'result':
-			return mapResult(message, session, turnId, state, logService, registry);
-		case 'assistant':
-			return tagWithParent(
-				mapAssistantCanonical(message, session, turnId, state, message.parent_tool_use_id, registry),
-				session,
-				message.parent_tool_use_id,
-				registry,
-			);
-		case 'user':
-			return tagWithParent(
-				mapUserMessage(message, session, state, logService, registry),
-				session,
-				message.parent_tool_use_id,
-				registry,
-			);
-		default:
-			// Phase 12 step 7 — system subtypes for subagent task discrimination.
-			if (message.type === 'system') {
-				return mapSubagentSystemMessage(message, session, registry);
-			}
-			return [];
-	}
+  if (logService.getLevel() <= LogLevel.Trace) {
+    try {
+      const snippet = JSON.stringify(message, (k, v) =>
+        typeof v === "string" && v.length > 200 ? v.slice(0, 200) + "…" : v,
+      );
+      logService.trace(
+        `[claudeMapSessionEvents] SDK message type=${message.type}: ${snippet?.slice(0, 2000) ?? "<unserializable>"}`,
+      );
+    } catch {
+      logService.trace(
+        `[claudeMapSessionEvents] SDK message type=${message.type} (unserializable)`,
+      );
+    }
+  }
+  switch (message.type) {
+    case "stream_event":
+      return tagWithParent(
+        mapStreamEvent(
+          message.event,
+          session,
+          turnId,
+          state,
+          logService,
+          message.parent_tool_use_id,
+          registry,
+          clientId,
+        ),
+        session,
+        message.parent_tool_use_id,
+        registry,
+      );
+    case "result":
+      return mapResult(message, session, turnId, state, logService, registry);
+    case "assistant":
+      return tagWithParent(
+        mapAssistantCanonical(
+          message,
+          session,
+          turnId,
+          state,
+          message.parent_tool_use_id,
+          registry,
+        ),
+        session,
+        message.parent_tool_use_id,
+        registry,
+      );
+    case "user":
+      return tagWithParent(
+        mapUserMessage(message, session, state, logService, registry),
+        session,
+        message.parent_tool_use_id,
+        registry,
+      );
+    default:
+      // Phase 12 step 7 — system subtypes for subagent task discrimination.
+      if (message.type === "system") {
+        return mapSubagentSystemMessage(message, session, registry);
+      }
+      return [];
+  }
 }
 
 /**
@@ -282,24 +342,36 @@ export function mapSDKMessageToAgentSignals(
  * the subagent session.
  */
 function mapAssistantCanonical(
-	message: Extract<SDKMessage, { type: 'assistant' }>,
-	session: URI,
-	turnId: string,
-	state: ClaudeMapperState,
-	parentToolUseId: string | null,
-	registry: SubagentRegistry,
+  message: Extract<SDKMessage, { type: "assistant" }>,
+  session: URI,
+  turnId: string,
+  state: ClaudeMapperState,
+  parentToolUseId: string | null,
+  registry: SubagentRegistry,
 ): AgentSignal[] {
-	if (parentToolUseId === null) {
-		const top: AgentSignal[] = [];
-		for (const block of message.message.content) {
-			if (block.type !== 'tool_use' || !SUBAGENT_SPAWNING_TOOL_NAMES.has(block.name)) {
-				continue;
-			}
-			top.push(buildTopLevelSubagentReadyAction(block, session, turnId, registry));
-		}
-		return top;
-	}
-	return emitInnerAssistantSignals(message, session, turnId, state, parentToolUseId, registry);
+  if (parentToolUseId === null) {
+    const top: AgentSignal[] = [];
+    for (const block of message.message.content) {
+      if (
+        block.type !== "tool_use" ||
+        !SUBAGENT_SPAWNING_TOOL_NAMES.has(block.name)
+      ) {
+        continue;
+      }
+      top.push(
+        buildTopLevelSubagentReadyAction(block, session, turnId, registry),
+      );
+    }
+    return top;
+  }
+  return emitInnerAssistantSignals(
+    message,
+    session,
+    turnId,
+    state,
+    parentToolUseId,
+    registry,
+  );
 }
 
 /**
@@ -314,67 +386,75 @@ function mapAssistantCanonical(
  * Phase 7 plan S3.3.5 directive).
  */
 function mapUserMessage(
-	message: Extract<SDKMessage, { type: 'user' }>,
-	session: URI,
-	state: ClaudeMapperState,
-	logService: ILogService,
-	registry: SubagentRegistry,
+  message: Extract<SDKMessage, { type: "user" }>,
+  session: URI,
+  state: ClaudeMapperState,
+  logService: ILogService,
+  registry: SubagentRegistry,
 ): AgentSignal[] {
-	const content = message.message.content;
-	if (!Array.isArray(content)) {
-		return [];
-	}
+  const content = message.message.content;
+  if (!Array.isArray(content)) {
+    return [];
+  }
 
-	const signals: AgentSignal[] = [];
-	for (const block of content) {
-		if (block.type !== 'tool_result') {
-			continue;
-		}
-		const tracked = state.lookupToolCall(block.tool_use_id);
-		if (!tracked) {
-			logService.warn(`[claudeMapSessionEvents] tool_result for unknown tool_use_id ${block.tool_use_id}`);
-			continue;
-		}
-		const isError = block.is_error === true;
-		const content: ToolResultContent[] = extractToolResultContent(block.content) ?? [];
-		const fileEdit = state.takeFileEdit(block.tool_use_id);
-		if (fileEdit) {
-			content.push(fileEdit);
-		}
-		const info = state.toolCalls.lookup(block.tool_use_id)?.info;
-		const pastTenseMessage: StringOrMarkdown = info
-			? getClaudePastTenseMessage(info.toolName, info.displayName, info.parsedInput, !isError)
-			: `${getClaudeToolDisplayName(tracked.toolName)} finished`;
-		signals.push({
-			kind: 'action',
-			session,
-			action: {
-				type: ActionType.SessionToolCallComplete,
-				turnId: tracked.turnId,
-				toolCallId: block.tool_use_id,
-				result: {
-					success: !isError,
-					pastTenseMessage,
-					content: content.length > 0 ? content : undefined,
-				},
-			},
-		});
-		state.completeToolCall(block.tool_use_id);
-		// Phase 12 — foreground subagent completion. A tool_result for a
-		// known spawning Task/Agent tool_use fires `subagent_completed`
-		// UNLESS the spawning entry has been flagged background, in which
-		// case completion is deferred to a later `task_notification`.
-		const spawn = registry.getSpawn(block.tool_use_id);
-		if (spawn && !spawn.background && spawn.markCompleted()) {
-			signals.push({
-				kind: 'subagent_completed',
-				session,
-				toolCallId: block.tool_use_id,
-			});
-			registry.removeSpawn(block.tool_use_id);
-		}
-	}
-	return signals;
+  const signals: AgentSignal[] = [];
+  for (const block of content) {
+    if (block.type !== "tool_result") {
+      continue;
+    }
+    const tracked = state.lookupToolCall(block.tool_use_id);
+    if (!tracked) {
+      logService.warn(
+        `[claudeMapSessionEvents] tool_result for unknown tool_use_id ${block.tool_use_id}`,
+      );
+      continue;
+    }
+    const isError = block.is_error === true;
+    const content: ToolResultContent[] =
+      extractToolResultContent(block.content) ?? [];
+    const fileEdit = state.takeFileEdit(block.tool_use_id);
+    if (fileEdit) {
+      content.push(fileEdit);
+    }
+    const info = state.toolCalls.lookup(block.tool_use_id)?.info;
+    const pastTenseMessage: StringOrMarkdown = info
+      ? getClaudePastTenseMessage(
+          info.toolName,
+          info.displayName,
+          info.parsedInput,
+          !isError,
+        )
+      : `${getClaudeToolDisplayName(tracked.toolName)} finished`;
+    signals.push({
+      kind: "action",
+      session,
+      action: {
+        type: ActionType.SessionToolCallComplete,
+        turnId: tracked.turnId,
+        toolCallId: block.tool_use_id,
+        result: {
+          success: !isError,
+          pastTenseMessage,
+          content: content.length > 0 ? content : undefined,
+        },
+      },
+    });
+    state.completeToolCall(block.tool_use_id);
+    // Phase 12 — foreground subagent completion. A tool_result for a
+    // known spawning Task/Agent tool_use fires `subagent_completed`
+    // UNLESS the spawning entry has been flagged background, in which
+    // case completion is deferred to a later `task_notification`.
+    const spawn = registry.getSpawn(block.tool_use_id);
+    if (spawn && !spawn.background && spawn.markCompleted()) {
+      signals.push({
+        kind: "subagent_completed",
+        session,
+        toolCallId: block.tool_use_id,
+      });
+      registry.removeSpawn(block.tool_use_id);
+    }
+  }
+  return signals;
 }
 
 /**
@@ -384,258 +464,303 @@ function mapUserMessage(
  * here. Phase 8 file-edit content is appended separately by
  * {@link mapUserMessage} from {@link ClaudeMapperState.takeFileEdit}.
  */
-function extractToolResultContent(content: unknown): { type: ToolResultContentType.Text; text: string }[] | undefined {
-	if (typeof content === 'string') {
-		return [{ type: ToolResultContentType.Text, text: content }];
-	}
-	if (!Array.isArray(content)) {
-		return undefined;
-	}
-	const out: { type: ToolResultContentType.Text; text: string }[] = [];
-	for (const block of content) {
-		if (isToolResultTextBlock(block)) {
-			out.push({ type: ToolResultContentType.Text, text: block.text });
-		}
-	}
-	return out.length > 0 ? out : undefined;
+function extractToolResultContent(
+  content: unknown,
+): { type: ToolResultContentType.Text; text: string }[] | undefined {
+  if (typeof content === "string") {
+    return [{ type: ToolResultContentType.Text, text: content }];
+  }
+  if (!Array.isArray(content)) {
+    return undefined;
+  }
+  const out: { type: ToolResultContentType.Text; text: string }[] = [];
+  for (const block of content) {
+    if (isToolResultTextBlock(block)) {
+      out.push({ type: ToolResultContentType.Text, text: block.text });
+    }
+  }
+  return out.length > 0 ? out : undefined;
 }
 
-function isToolResultTextBlock(block: unknown): block is { type: 'text'; text: string } {
-	if (block === null || typeof block !== 'object') {
-		return false;
-	}
-	const candidate = block as { type?: unknown; text?: unknown };
-	return candidate.type === 'text' && typeof candidate.text === 'string';
+function isToolResultTextBlock(
+  block: unknown,
+): block is { type: "text"; text: string } {
+  if (block === null || typeof block !== "object") {
+    return false;
+  }
+  const candidate = block as { type?: unknown; text?: unknown };
+  return candidate.type === "text" && typeof candidate.text === "string";
 }
 
 function mapResult(
-	message: Extract<SDKMessage, { type: 'result' }>,
-	session: URI,
-	turnId: string,
-	state: ClaudeMapperState,
-	logService: ILogService,
-	registry: SubagentRegistry,
+  message: Extract<SDKMessage, { type: "result" }>,
+  session: URI,
+  turnId: string,
+  state: ClaudeMapperState,
+  logService: ILogService,
+  registry: SubagentRegistry,
 ): AgentSignal[] {
-	const signals: AgentSignal[] = [];
-	if (message.subtype === 'success') {
-		// `modelUsage` is keyed by model name; pick the first key as the
-		// reported model. Phase 6 turns are single-model; multi-model
-		// attribution is a Phase 7+ concern.
-		const modelKey = Object.keys(message.modelUsage)[0];
-		signals.push({
-			kind: 'action',
-			session,
-			action: {
-				type: ActionType.SessionUsage,
-				turnId,
-				usage: {
-					inputTokens: message.usage.input_tokens,
-					outputTokens: message.usage.output_tokens,
-					cacheReadTokens: message.usage.cache_read_input_tokens,
-					...(modelKey ? { model: modelKey } : {}),
-				},
-			},
-		});
-	}
-	// `SessionTurnComplete` is emitted by the session via
-	// `ClaudeSdkPipeline.onTurnComplete`, NOT here. The pipeline knows
-	// when the protocol Turn is truly done (queue fully drained vs an
-	// intermediate result during a steering preempt — CONTEXT.md M10);
-	// the mapper does not have that state.
-	state.clearPendingToolCalls(logService);
-	// Phase 12 — drain orphaned subagent-spawning entries (foreground
-	// only; background entries survive across turns by design). The
-	// registry owns this state; the mapper drives the drain at turn end.
-	for (const orphan of registry.drainForegroundSpawns()) {
-		logService.warn(`[claudeMapSessionEvents] turn ended with pending subagent-spawning tool_use ${orphan.toolUseId} (agentId=${orphan.agentId ?? '<unresolved>'}); dropping cross-message state`);
-	}
-	return signals;
+  const signals: AgentSignal[] = [];
+  if (message.subtype === "success") {
+    // `modelUsage` is keyed by model name; pick the first key as the
+    // reported model. Phase 6 turns are single-model; multi-model
+    // attribution is a Phase 7+ concern.
+    const modelKey = Object.keys(message.modelUsage)[0];
+    signals.push({
+      kind: "action",
+      session,
+      action: {
+        type: ActionType.SessionUsage,
+        turnId,
+        usage: {
+          inputTokens: message.usage.input_tokens,
+          outputTokens: message.usage.output_tokens,
+          cacheReadTokens: message.usage.cache_read_input_tokens,
+          ...(modelKey ? { model: modelKey } : {}),
+        },
+      },
+    });
+  }
+  // `SessionTurnComplete` is emitted by the session via
+  // `ClaudeSdkPipeline.onTurnComplete`, NOT here. The pipeline knows
+  // when the protocol Turn is truly done (queue fully drained vs an
+  // intermediate result during a steering preempt — CONTEXT.md M10);
+  // the mapper does not have that state.
+  state.clearPendingToolCalls(logService);
+  // Phase 12 — drain orphaned subagent-spawning entries (foreground
+  // only; background entries survive across turns by design). The
+  // registry owns this state; the mapper drives the drain at turn end.
+  for (const orphan of registry.drainForegroundSpawns()) {
+    logService.warn(
+      `[claudeMapSessionEvents] turn ended with pending subagent-spawning tool_use ${orphan.toolUseId} (agentId=${orphan.agentId ?? "<unresolved>"}); dropping cross-message state`,
+    );
+  }
+  return signals;
 }
 
 function mapStreamEvent(
-	event: Extract<SDKMessage, { type: 'stream_event' }>['event'],
-	session: URI,
-	turnId: string,
-	state: ClaudeMapperState,
-	logService: ILogService,
-	parentToolUseId: string | null,
-	registry: SubagentRegistry,
-	clientId: string | undefined,
+  event: Extract<SDKMessage, { type: "stream_event" }>["event"],
+  session: URI,
+  turnId: string,
+  state: ClaudeMapperState,
+  logService: ILogService,
+  parentToolUseId: string | null,
+  registry: SubagentRegistry,
+  clientId: string | undefined,
 ): AgentSignal[] {
-	switch (event.type) {
-		case 'message_start':
-			state.resetMessage(event.message.id);
-			return [];
+  switch (event.type) {
+    case "message_start":
+      state.resetMessage(event.message.id);
+      return [];
 
-		case 'content_block_start': {
-			const block = event.content_block;
-			if (block.type === 'text') {
-				return [{
-					kind: 'action',
-					session,
-					action: {
-						type: ActionType.SessionResponsePart,
-						turnId,
-						part: {
-							kind: ResponsePartKind.Markdown,
-							id: makeContentBlockPartId(turnId, state, event.index, logService),
-							content: '',
-						},
-					},
-				}];
-			}
-			if (block.type === 'thinking') {
-				return [{
-					kind: 'action',
-					session,
-					action: {
-						type: ActionType.SessionResponsePart,
-						turnId,
-						part: {
-							kind: ResponsePartKind.Reasoning,
-							id: makeContentBlockPartId(turnId, state, event.index, logService),
-							content: '',
-						},
-					},
-				}];
-			}
-			if (block.type === 'tool_use') {
-				// Phase 10 — strip the SDK's `mcp__<server>__` prefix for
-				// our in-process client-tool MCP server. The SDK surfaces
-				// in-process MCP tools to the model with that prefix, but
-				// the workbench's registered client-tool list (and the
-				// MCP handler's closure) use the unprefixed name. Without
-				// normalizing at the seam, `SessionToolCallReady` /
-				// `SessionToolCallComplete` would carry the prefixed name
-				// and the workbench would never recognize them as client
-				// tools. SDK-owned tools (Read, Write, Bash, etc.) and
-				// subagent spawn tools pass through unchanged because
-				// they don't carry the prefix.
-				const toolName = stripClientToolNamePrefix(block.name);
-				const isClientTool = hasClientToolNamePrefix(block.name);
-				state.startToolBlock(event.index, block.id, toolName, turnId);
-				// Phase 12 — subagent correlation bookkeeping. Either this
-				// tool_use is at the top level and (if Task/Agent) spawns a
-				// new subagent, or it is inner and we record its edge to the
-				// parent. They are mutually exclusive (a Task call inside a
-				// subagent is itself an inner tool_use; the resolver chain
-				// handles nested spawns by following the parent chain).
-				// Gated on `!isClientTool` so a workbench tool named `Task` /
-				// `Agent` cannot impersonate the SDK's subagent-spawn tools.
-				const isSubagentSpawn = !isClientTool && SUBAGENT_SPAWNING_TOOL_NAMES.has(toolName);
-				if (parentToolUseId === null) {
-					if (isSubagentSpawn) {
-						registry.recordSpawn(block.id);
-					}
-				} else {
-					registry.noteInnerTool(block.id, parentToolUseId);
-				}
-				// Phase 8.5 — `_meta.toolKind` drives the workbench's terminal /
-				// search / subagent renderers. Single write at the tool-open
-				// seam; the reducer carries `_meta` forward to all subsequent
-				// state transitions (D6). Subagent meta from Phase 12 is now
-				// produced by `buildClaudeToolMeta` because
-				// `getClaudeToolKind('Task') === 'subagent'`.
-				const meta = buildClaudeToolMeta(toolName);
-				const toolClientId = isClientTool ? clientId : undefined;
-				return [{
-					kind: 'action',
-					session,
-					action: {
-						type: ActionType.SessionToolCallStart,
-						turnId,
-						toolCallId: block.id,
-						toolName,
-						displayName: getClaudeToolDisplayName(toolName),
-						...(toolClientId ? { toolClientId } : {}),
-						...(meta ? { _meta: meta } : {}),
-					},
-				}];
-			}
-			return [];
-		}
+    case "content_block_start": {
+      const block = event.content_block;
+      if (block.type === "text") {
+        return [
+          {
+            kind: "action",
+            session,
+            action: {
+              type: ActionType.SessionResponsePart,
+              turnId,
+              part: {
+                kind: ResponsePartKind.Markdown,
+                id: makeContentBlockPartId(
+                  turnId,
+                  state,
+                  event.index,
+                  logService,
+                ),
+                content: "",
+              },
+            },
+          },
+        ];
+      }
+      if (block.type === "thinking") {
+        return [
+          {
+            kind: "action",
+            session,
+            action: {
+              type: ActionType.SessionResponsePart,
+              turnId,
+              part: {
+                kind: ResponsePartKind.Reasoning,
+                id: makeContentBlockPartId(
+                  turnId,
+                  state,
+                  event.index,
+                  logService,
+                ),
+                content: "",
+              },
+            },
+          },
+        ];
+      }
+      if (block.type === "tool_use") {
+        // Phase 10 — strip the SDK's `mcp__<server>__` prefix for
+        // our in-process client-tool MCP server. The SDK surfaces
+        // in-process MCP tools to the model with that prefix, but
+        // the workbench's registered client-tool list (and the
+        // MCP handler's closure) use the unprefixed name. Without
+        // normalizing at the seam, `SessionToolCallReady` /
+        // `SessionToolCallComplete` would carry the prefixed name
+        // and the workbench would never recognize them as client
+        // tools. SDK-owned tools (Read, Write, Bash, etc.) and
+        // subagent spawn tools pass through unchanged because
+        // they don't carry the prefix.
+        const toolName = stripClientToolNamePrefix(block.name);
+        const isClientTool = hasClientToolNamePrefix(block.name);
+        state.startToolBlock(event.index, block.id, toolName, turnId);
+        // Phase 12 — subagent correlation bookkeeping. Either this
+        // tool_use is at the top level and (if Task/Agent) spawns a
+        // new subagent, or it is inner and we record its edge to the
+        // parent. They are mutually exclusive (a Task call inside a
+        // subagent is itself an inner tool_use; the resolver chain
+        // handles nested spawns by following the parent chain).
+        // Gated on `!isClientTool` so a workbench tool named `Task` /
+        // `Agent` cannot impersonate the SDK's subagent-spawn tools.
+        const isSubagentSpawn =
+          !isClientTool && SUBAGENT_SPAWNING_TOOL_NAMES.has(toolName);
+        if (parentToolUseId === null) {
+          if (isSubagentSpawn) {
+            registry.recordSpawn(block.id);
+          }
+        } else {
+          registry.noteInnerTool(block.id, parentToolUseId);
+        }
+        // Phase 8.5 — `_meta.toolKind` drives the workbench's terminal /
+        // search / subagent renderers. Single write at the tool-open
+        // seam; the reducer carries `_meta` forward to all subsequent
+        // state transitions (D6). Subagent meta from Phase 12 is now
+        // produced by `buildClaudeToolMeta` because
+        // `getClaudeToolKind('Task') === 'subagent'`.
+        const meta = buildClaudeToolMeta(toolName);
+        const toolClientId = isClientTool ? clientId : undefined;
+        return [
+          {
+            kind: "action",
+            session,
+            action: {
+              type: ActionType.SessionToolCallStart,
+              turnId,
+              toolCallId: block.id,
+              toolName,
+              displayName: getClaudeToolDisplayName(toolName),
+              ...(toolClientId ? { toolClientId } : {}),
+              ...(meta ? { _meta: meta } : {}),
+            },
+          },
+        ];
+      }
+      return [];
+    }
 
-		case 'content_block_delta': {
-			if (event.delta.type === 'text_delta') {
-				return [{
-					kind: 'action',
-					session,
-					action: {
-						type: ActionType.SessionDelta,
-						turnId,
-						partId: makeContentBlockPartId(turnId, state, event.index, logService),
-						content: event.delta.text,
-					},
-				}];
-			}
-			if (event.delta.type === 'thinking_delta') {
-				return [{
-					kind: 'action',
-					session,
-					action: {
-						type: ActionType.SessionReasoning,
-						turnId,
-						partId: makeContentBlockPartId(turnId, state, event.index, logService),
-						content: event.delta.thinking,
-					},
-				}];
-			}
-			if (event.delta.type === 'input_json_delta') {
-				const tracked = state.getActiveToolBlock(event.index);
-				if (!tracked) {
-					logService.warn(`[claudeMapSessionEvents] input_json_delta for unknown content-block index ${event.index}`);
-					return [];
-				}
-				state.appendToolBlockInputDelta(event.index, event.delta.partial_json);
-				return [{
-					kind: 'action',
-					session,
-					action: {
-						type: ActionType.SessionToolCallDelta,
-						turnId,
-						toolCallId: tracked.toolUseId,
-						content: event.delta.partial_json,
-					},
-				}];
-			}
-			return [];
-		}
+    case "content_block_delta": {
+      if (event.delta.type === "text_delta") {
+        return [
+          {
+            kind: "action",
+            session,
+            action: {
+              type: ActionType.SessionDelta,
+              turnId,
+              partId: makeContentBlockPartId(
+                turnId,
+                state,
+                event.index,
+                logService,
+              ),
+              content: event.delta.text,
+            },
+          },
+        ];
+      }
+      if (event.delta.type === "thinking_delta") {
+        return [
+          {
+            kind: "action",
+            session,
+            action: {
+              type: ActionType.SessionReasoning,
+              turnId,
+              partId: makeContentBlockPartId(
+                turnId,
+                state,
+                event.index,
+                logService,
+              ),
+              content: event.delta.thinking,
+            },
+          },
+        ];
+      }
+      if (event.delta.type === "input_json_delta") {
+        const tracked = state.getActiveToolBlock(event.index);
+        if (!tracked) {
+          logService.warn(
+            `[claudeMapSessionEvents] input_json_delta for unknown content-block index ${event.index}`,
+          );
+          return [];
+        }
+        state.appendToolBlockInputDelta(event.index, event.delta.partial_json);
+        return [
+          {
+            kind: "action",
+            session,
+            action: {
+              type: ActionType.SessionToolCallDelta,
+              turnId,
+              toolCallId: tracked.toolUseId,
+              content: event.delta.partial_json,
+            },
+          },
+        ];
+      }
+      return [];
+    }
 
-		case 'content_block_stop': {
-			const tracked = state.getActiveToolBlock(event.index);
-			state.finalizeToolBlock(event.index);
-			state.endToolBlock(event.index);
-			if (!tracked) {
-				return [];
-			}
-			const entry = state.toolCalls.lookup(tracked.toolUseId);
-			const info = entry?.info;
-			if (!info) {
-				return [];
-			}
-			const meta = buildClaudeToolMeta(tracked.toolName);
-			return [{
-				kind: 'action',
-				session,
-				action: {
-					type: ActionType.SessionToolCallReady,
-					turnId,
-					toolCallId: tracked.toolUseId,
-					invocationMessage: info.invocationMessage,
-					...(info.toolInput !== undefined ? { toolInput: info.toolInput } : {}),
-					confirmed: ToolCallConfirmationReason.NotNeeded,
-					...(meta ? { _meta: meta } : {}),
-				},
-			}];
-		}
+    case "content_block_stop": {
+      const tracked = state.getActiveToolBlock(event.index);
+      state.finalizeToolBlock(event.index);
+      state.endToolBlock(event.index);
+      if (!tracked) {
+        return [];
+      }
+      const entry = state.toolCalls.lookup(tracked.toolUseId);
+      const info = entry?.info;
+      if (!info) {
+        return [];
+      }
+      const meta = buildClaudeToolMeta(tracked.toolName);
+      return [
+        {
+          kind: "action",
+          session,
+          action: {
+            type: ActionType.SessionToolCallReady,
+            turnId,
+            toolCallId: tracked.toolUseId,
+            invocationMessage: info.invocationMessage,
+            ...(info.toolInput !== undefined
+              ? { toolInput: info.toolInput }
+              : {}),
+            confirmed: ToolCallConfirmationReason.NotNeeded,
+            ...(meta ? { _meta: meta } : {}),
+          },
+        },
+      ];
+    }
 
-		case 'message_delta':
-		case 'message_stop':
-			return [];
+    case "message_delta":
+    case "message_stop":
+      return [];
 
-		default:
-			return [];
-	}
+    default:
+      return [];
+  }
 }
 
 /**
@@ -654,16 +779,17 @@ function mapStreamEvent(
  * bug, not a transport reorder.
  */
 function makeContentBlockPartId(
-	turnId: string,
-	state: ClaudeMapperState,
-	index: number,
-	logService: ILogService,
+  turnId: string,
+  state: ClaudeMapperState,
+  index: number,
+  logService: ILogService,
 ): string {
-	const messageId = state.getCurrentMessageId();
-	if (messageId === undefined) {
-		logService.warn(`[claudeMapSessionEvents] content block at index ${index} arrived before message_start; using turn-scoped id`);
-		return `${turnId}#${index}`;
-	}
-	return `${turnId}#${messageId}#${index}`;
+  const messageId = state.getCurrentMessageId();
+  if (messageId === undefined) {
+    logService.warn(
+      `[claudeMapSessionEvents] content block at index ${index} arrived before message_start; using turn-scoped id`,
+    );
+    return `${turnId}#${index}`;
+  }
+  return `${turnId}#${messageId}#${index}`;
 }
-

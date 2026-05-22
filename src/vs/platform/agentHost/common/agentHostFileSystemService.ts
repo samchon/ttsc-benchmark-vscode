@@ -3,16 +3,25 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { Disposable, IDisposable } from '../../../base/common/lifecycle.js';
-import { IFileService } from '../../files/common/files.js';
-import { InMemoryFileSystemProvider } from '../../files/common/inMemoryFilesystemProvider.js';
-import { InstantiationType, registerSingleton } from '../../instantiation/common/extensions.js';
-import { createDecorator } from '../../instantiation/common/instantiation.js';
-import { ILabelService } from '../../label/common/label.js';
-import { AgentHostFileSystemProvider, type IRemoteFilesystemConnection } from './agentHostFileSystemProvider.js';
-import { AGENT_HOST_LABEL_FORMATTER, AGENT_HOST_SCHEME } from './agentHostUri.js';
+import { Disposable, IDisposable } from "../../../base/common/lifecycle.js";
+import { IFileService } from "../../files/common/files.js";
+import { InMemoryFileSystemProvider } from "../../files/common/inMemoryFilesystemProvider.js";
+import {
+  InstantiationType,
+  registerSingleton,
+} from "../../instantiation/common/extensions.js";
+import { createDecorator } from "../../instantiation/common/instantiation.js";
+import { ILabelService } from "../../label/common/label.js";
+import {
+  AgentHostFileSystemProvider,
+  type IRemoteFilesystemConnection,
+} from "./agentHostFileSystemProvider.js";
+import {
+  AGENT_HOST_LABEL_FORMATTER,
+  AGENT_HOST_SCHEME,
+} from "./agentHostUri.js";
 
-export type { IRemoteFilesystemConnection } from './agentHostFileSystemProvider.js';
+export type { IRemoteFilesystemConnection } from "./agentHostFileSystemProvider.js";
 
 /**
  * Scheme used for the in-memory plugin filesystem backing synced customizations.
@@ -20,55 +29,76 @@ export type { IRemoteFilesystemConnection } from './agentHostFileSystemProvider.
  * URIs under this scheme are served by a registered {@link InMemoryFileSystemProvider}
  * and are reachable by the agent host via `fetchContent`.
  */
-export const SYNCED_CUSTOMIZATION_SCHEME = 'vscode-synced-customization';
+export const SYNCED_CUSTOMIZATION_SCHEME = "vscode-synced-customization";
 
-export const IAgentHostFileSystemService = createDecorator<IAgentHostFileSystemService>('agentHostFileSystemService');
+export const IAgentHostFileSystemService =
+  createDecorator<IAgentHostFileSystemService>("agentHostFileSystemService");
 
 export interface IAgentHostFileSystemService {
-	readonly _serviceBrand: undefined;
+  readonly _serviceBrand: undefined;
 
-	/**
-	 * Register a mapping from a URI authority to a connection so that
-	 * `vscode-agent-host://[authority]/…` URIs resolve through this connection.
-	 */
-	registerAuthority(authority: string, connection: IRemoteFilesystemConnection): IDisposable;
+  /**
+   * Register a mapping from a URI authority to a connection so that
+   * `vscode-agent-host://[authority]/…` URIs resolve through this connection.
+   */
+  registerAuthority(
+    authority: string,
+    connection: IRemoteFilesystemConnection,
+  ): IDisposable;
 
-	/**
-	 * Ensures the in-memory filesystem provider for synced customizations
-	 * (`vscode-synced-customization:` scheme) is registered. Safe to call
-	 * multiple times — only the first call registers the provider.
-	 */
-	ensureSyncedCustomizationProvider(): void;
+  /**
+   * Ensures the in-memory filesystem provider for synced customizations
+   * (`vscode-synced-customization:` scheme) is registered. Safe to call
+   * multiple times — only the first call registers the provider.
+   */
+  ensureSyncedCustomizationProvider(): void;
 }
 
-class AgentHostFileSystemService extends Disposable implements IAgentHostFileSystemService {
-	declare readonly _serviceBrand: undefined;
+class AgentHostFileSystemService
+  extends Disposable
+  implements IAgentHostFileSystemService
+{
+  declare readonly _serviceBrand: undefined;
 
-	private readonly _fsProvider: AgentHostFileSystemProvider;
-	private _syncedCustomizationProviderRegistered = false;
+  private readonly _fsProvider: AgentHostFileSystemProvider;
+  private _syncedCustomizationProviderRegistered = false;
 
-	constructor(
-		@IFileService private readonly _fileService: IFileService,
-		@ILabelService labelService: ILabelService,
-	) {
-		super();
+  constructor(
+    @IFileService private readonly _fileService: IFileService,
+    @ILabelService labelService: ILabelService,
+  ) {
+    super();
 
-		this._fsProvider = this._register(new AgentHostFileSystemProvider());
-		this._register(_fileService.registerProvider(AGENT_HOST_SCHEME, this._fsProvider));
-		this._register(labelService.registerFormatter(AGENT_HOST_LABEL_FORMATTER));
-	}
+    this._fsProvider = this._register(new AgentHostFileSystemProvider());
+    this._register(
+      _fileService.registerProvider(AGENT_HOST_SCHEME, this._fsProvider),
+    );
+    this._register(labelService.registerFormatter(AGENT_HOST_LABEL_FORMATTER));
+  }
 
-	registerAuthority(authority: string, connection: IRemoteFilesystemConnection): IDisposable {
-		return this._fsProvider.registerAuthority(authority, connection);
-	}
+  registerAuthority(
+    authority: string,
+    connection: IRemoteFilesystemConnection,
+  ): IDisposable {
+    return this._fsProvider.registerAuthority(authority, connection);
+  }
 
-	ensureSyncedCustomizationProvider(): void {
-		if (!this._syncedCustomizationProviderRegistered) {
-			this._syncedCustomizationProviderRegistered = true;
-			const provider = this._register(new InMemoryFileSystemProvider());
-			this._register(this._fileService.registerProvider(SYNCED_CUSTOMIZATION_SCHEME, provider));
-		}
-	}
+  ensureSyncedCustomizationProvider(): void {
+    if (!this._syncedCustomizationProviderRegistered) {
+      this._syncedCustomizationProviderRegistered = true;
+      const provider = this._register(new InMemoryFileSystemProvider());
+      this._register(
+        this._fileService.registerProvider(
+          SYNCED_CUSTOMIZATION_SCHEME,
+          provider,
+        ),
+      );
+    }
+  }
 }
 
-registerSingleton(IAgentHostFileSystemService, AgentHostFileSystemService, InstantiationType.Delayed);
+registerSingleton(
+  IAgentHostFileSystemService,
+  AgentHostFileSystemService,
+  InstantiationType.Delayed,
+);

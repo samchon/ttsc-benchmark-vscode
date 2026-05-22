@@ -3,19 +3,22 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { McpSdkServerConfigWithInstance, Options } from '@anthropic-ai/claude-agent-sdk';
-import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { delimiter, dirname } from '../../../../base/common/path.js';
-import { URI } from '../../../../base/common/uri.js';
-import { rgDiskPath } from '../../../../base/node/ripgrep.js';
-import { ClaudePermissionMode } from '../../common/claudeSessionConfigKeys.js';
-import { resolveClaudeEffort } from '../../common/claudeModelConfig.js';
-import { PendingRequestRegistry } from '../../common/pendingRequestRegistry.js';
-import type { ModelSelection } from '../../common/state/protocol/state.js';
-import { IClaudeAgentSdkService } from './claudeAgentSdkService.js';
-import { buildClientToolMcpServer } from './clientTools/claudeClientToolMcpServer.js';
-import { IClaudeProxyHandle } from './claudeProxyService.js';
-import { SessionClientToolsDiff } from './clientTools/claudeSessionClientToolsModel.js';
+import type {
+  McpSdkServerConfigWithInstance,
+  Options,
+} from "@anthropic-ai/claude-agent-sdk";
+import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import { delimiter, dirname } from "../../../../base/common/path.js";
+import { URI } from "../../../../base/common/uri.js";
+import { rgDiskPath } from "../../../../base/node/ripgrep.js";
+import { ClaudePermissionMode } from "../../common/claudeSessionConfigKeys.js";
+import { resolveClaudeEffort } from "../../common/claudeModelConfig.js";
+import { PendingRequestRegistry } from "../../common/pendingRequestRegistry.js";
+import type { ModelSelection } from "../../common/state/protocol/state.js";
+import { IClaudeAgentSdkService } from "./claudeAgentSdkService.js";
+import { buildClientToolMcpServer } from "./clientTools/claudeClientToolMcpServer.js";
+import { IClaudeProxyHandle } from "./claudeProxyService.js";
+import { SessionClientToolsDiff } from "./clientTools/claudeSessionClientToolsModel.js";
 
 /**
  * Inputs to {@link buildOptions} that vary per startup. Pure-data: no
@@ -24,14 +27,16 @@ import { SessionClientToolsDiff } from './clientTools/claudeSessionClientToolsMo
  * SDK's {@link Options} discriminated union.
  */
 export interface IBuildOptionsInput {
-	readonly sessionId: string;
-	readonly workingDirectory: URI;
-	readonly model: ModelSelection | undefined;
-	readonly abortController: AbortController;
-	readonly permissionMode: ClaudePermissionMode;
-	readonly canUseTool: NonNullable<Options['canUseTool']>;
-	readonly isResume: boolean;
-	readonly mcpServers: Record<string, McpSdkServerConfigWithInstance> | undefined;
+  readonly sessionId: string;
+  readonly workingDirectory: URI;
+  readonly model: ModelSelection | undefined;
+  readonly abortController: AbortController;
+  readonly permissionMode: ClaudePermissionMode;
+  readonly canUseTool: NonNullable<Options["canUseTool"]>;
+  readonly isResume: boolean;
+  readonly mcpServers:
+    | Record<string, McpSdkServerConfigWithInstance>
+    | undefined;
 }
 
 /**
@@ -51,48 +56,48 @@ export interface IBuildOptionsInput {
  * from the session's {@link SessionClientToolsDiff}.
  */
 export async function buildOptions(
-	input: IBuildOptionsInput,
-	proxyHandle: IClaudeProxyHandle,
-	logStderr: (data: string) => void,
-	logElicitation: (msg: string) => void,
+  input: IBuildOptionsInput,
+  proxyHandle: IClaudeProxyHandle,
+  logStderr: (data: string) => void,
+  logElicitation: (msg: string) => void,
 ): Promise<Options> {
-	const subprocessEnv = buildSubprocessEnv();
-	const resolvedRgDiskPath = await rgDiskPath();
-	const settingsEnv: Record<string, string> = {
-		ANTHROPIC_BASE_URL: proxyHandle.baseUrl,
-		ANTHROPIC_AUTH_TOKEN: `${proxyHandle.nonce}.${input.sessionId}`,
-		CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: '1',
-		USE_BUILTIN_RIPGREP: '0',
-		PATH: `${dirname(resolvedRgDiskPath)}${delimiter}${process.env.PATH ?? ''}`,
-	};
+  const subprocessEnv = buildSubprocessEnv();
+  const resolvedRgDiskPath = await rgDiskPath();
+  const settingsEnv: Record<string, string> = {
+    ANTHROPIC_BASE_URL: proxyHandle.baseUrl,
+    ANTHROPIC_AUTH_TOKEN: `${proxyHandle.nonce}.${input.sessionId}`,
+    CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC: "1",
+    USE_BUILTIN_RIPGREP: "0",
+    PATH: `${dirname(resolvedRgDiskPath)}${delimiter}${process.env.PATH ?? ""}`,
+  };
 
-	return {
-		cwd: input.workingDirectory.fsPath,
-		executable: process.execPath as 'node',
-		env: subprocessEnv,
-		abortController: input.abortController,
-		allowDangerouslySkipPermissions: true,
-		canUseTool: input.canUseTool,
-		onElicitation: async req => {
-			logElicitation(req.message ?? '');
-			return { action: 'cancel' };
-		},
-		disallowedTools: ['WebSearch'],
-		includePartialMessages: true,
-		forwardSubagentText: true,
-		enableFileCheckpointing: true,
-		model: input.model?.id,
-		effort: resolveClaudeEffort(input.model),
-		permissionMode: input.permissionMode,
-		...(input.isResume
-			? { resume: input.sessionId }
-			: { sessionId: input.sessionId }),
-		...(input.mcpServers ? { mcpServers: input.mcpServers } : {}),
-		settingSources: ['user', 'project', 'local'],
-		settings: { env: settingsEnv },
-		systemPrompt: { type: 'preset', preset: 'claude_code' },
-		stderr: logStderr,
-	};
+  return {
+    cwd: input.workingDirectory.fsPath,
+    executable: process.execPath as "node",
+    env: subprocessEnv,
+    abortController: input.abortController,
+    allowDangerouslySkipPermissions: true,
+    canUseTool: input.canUseTool,
+    onElicitation: async (req) => {
+      logElicitation(req.message ?? "");
+      return { action: "cancel" };
+    },
+    disallowedTools: ["WebSearch"],
+    includePartialMessages: true,
+    forwardSubagentText: true,
+    enableFileCheckpointing: true,
+    model: input.model?.id,
+    effort: resolveClaudeEffort(input.model),
+    permissionMode: input.permissionMode,
+    ...(input.isResume
+      ? { resume: input.sessionId }
+      : { sessionId: input.sessionId }),
+    ...(input.mcpServers ? { mcpServers: input.mcpServers } : {}),
+    settingSources: ["user", "project", "local"],
+    settings: { env: settingsEnv },
+    systemPrompt: { type: "preset", preset: "claude_code" },
+    stderr: logStderr,
+  };
 }
 
 /**
@@ -106,16 +111,20 @@ export async function buildOptions(
  * {@link SessionClientToolsDiff.markDirty}.
  */
 export async function buildClientMcpServers(
-	toolDiff: SessionClientToolsDiff,
-	registry: PendingRequestRegistry<CallToolResult>,
-	sdkService: IClaudeAgentSdkService,
+  toolDiff: SessionClientToolsDiff,
+  registry: PendingRequestRegistry<CallToolResult>,
+  sdkService: IClaudeAgentSdkService,
 ): Promise<Record<string, McpSdkServerConfigWithInstance> | undefined> {
-	const { tools } = toolDiff.consume();
-	if (!tools || tools.length === 0) {
-		return undefined;
-	}
-	const server = await buildClientToolMcpServer(tools, id => registry.register(id), sdkService);
-	return { client: server };
+  const { tools } = toolDiff.consume();
+  if (!tools || tools.length === 0) {
+    return undefined;
+  }
+  const server = await buildClientToolMcpServer(
+    tools,
+    (id) => registry.register(id),
+    sdkService,
+  );
+  return { client: server };
 }
 
 /**
@@ -134,16 +143,18 @@ export async function buildClientMcpServers(
  * Exported for unit testing as a pure function over `process.env`.
  */
 export function buildSubprocessEnv(): Record<string, string | undefined> {
-	const env: Record<string, string | undefined> = {
-		ELECTRON_RUN_AS_NODE: '1',
-		NODE_OPTIONS: undefined,
-		ANTHROPIC_API_KEY: undefined,
-	};
-	for (const key of Object.keys(process.env)) {
-		if (key === 'ELECTRON_RUN_AS_NODE') { continue; }
-		if (key.startsWith('VSCODE_') || key.startsWith('ELECTRON_')) {
-			env[key] = undefined;
-		}
-	}
-	return env;
+  const env: Record<string, string | undefined> = {
+    ELECTRON_RUN_AS_NODE: "1",
+    NODE_OPTIONS: undefined,
+    ANTHROPIC_API_KEY: undefined,
+  };
+  for (const key of Object.keys(process.env)) {
+    if (key === "ELECTRON_RUN_AS_NODE") {
+      continue;
+    }
+    if (key.startsWith("VSCODE_") || key.startsWith("ELECTRON_")) {
+      env[key] = undefined;
+    }
+  }
+  return env;
 }

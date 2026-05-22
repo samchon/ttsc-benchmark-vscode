@@ -3,10 +3,10 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import { encodeBase64, VSBuffer } from '../../../base/common/buffer.js';
-import { Schemas } from '../../../base/common/network.js';
-import { URI } from '../../../base/common/uri.js';
-import type { ResourceLabelFormatter } from '../../label/common/label.js';
+import { encodeBase64, VSBuffer } from "../../../base/common/buffer.js";
+import { Schemas } from "../../../base/common/network.js";
+import { URI } from "../../../base/common/uri.js";
+import type { ResourceLabelFormatter } from "../../label/common/label.js";
 
 /**
  * The URI scheme for accessing files on a remote agent host.
@@ -23,7 +23,7 @@ import type { ResourceLabelFormatter } from '../../label/common/label.js';
  * vscode-agent-host://my-server/file//home/user/foo.ts
  * ```
  */
-export const AGENT_HOST_SCHEME = 'vscode-agent-host';
+export const AGENT_HOST_SCHEME = "vscode-agent-host";
 
 /**
  * Wraps a remote URI into a {@link AGENT_HOST_SCHEME} URI that can be
@@ -34,18 +34,21 @@ export const AGENT_HOST_SCHEME = 'vscode-agent-host';
  * @param connectionAuthority The sanitized connection identifier used as
  *   the URI authority (from {@link agentHostAuthority}).
  */
-export function toAgentHostUri(originalUri: URI, connectionAuthority: string): URI {
-	if (connectionAuthority === 'local' && originalUri.scheme === Schemas.file) {
-		return originalUri;
-	}
+export function toAgentHostUri(
+  originalUri: URI,
+  connectionAuthority: string,
+): URI {
+  if (connectionAuthority === "local" && originalUri.scheme === Schemas.file) {
+    return originalUri;
+  }
 
-	// Path format: /[originalScheme]/[originalAuthority]/[originalPath]
-	const originalAuthority = originalUri.authority || '';
-	return URI.from({
-		scheme: AGENT_HOST_SCHEME,
-		authority: connectionAuthority,
-		path: `/${originalUri.scheme}/${originalAuthority || '-'}${originalUri.path}`,
-	});
+  // Path format: /[originalScheme]/[originalAuthority]/[originalPath]
+  const originalAuthority = originalUri.authority || "";
+  return URI.from({
+    scheme: AGENT_HOST_SCHEME,
+    authority: connectionAuthority,
+    path: `/${originalUri.scheme}/${originalAuthority || "-"}${originalUri.path}`,
+  });
 }
 
 /**
@@ -54,42 +57,46 @@ export function toAgentHostUri(originalUri: URI, connectionAuthority: string): U
  * The inverse of {@link toAgentHostUri}.
  */
 export function fromAgentHostUri(agentHostUri: URI): URI {
-	if (agentHostUri.scheme !== AGENT_HOST_SCHEME) {
-		return agentHostUri;
-	}
+  if (agentHostUri.scheme !== AGENT_HOST_SCHEME) {
+    return agentHostUri;
+  }
 
-	// Path: /[originalScheme]/[originalAuthority]/[rest of original path]
-	const path = agentHostUri.path;
+  // Path: /[originalScheme]/[originalAuthority]/[rest of original path]
+  const path = agentHostUri.path;
 
-	// Find first segment boundary after leading /
-	const schemeEnd = path.indexOf('/', 1);
-	if (schemeEnd === -1) {
-		// Malformed — treat whole path as file scheme
-		return URI.from({ scheme: 'file', path });
-	}
+  // Find first segment boundary after leading /
+  const schemeEnd = path.indexOf("/", 1);
+  if (schemeEnd === -1) {
+    // Malformed — treat whole path as file scheme
+    return URI.from({ scheme: "file", path });
+  }
 
-	const originalScheme = path.substring(1, schemeEnd);
+  const originalScheme = path.substring(1, schemeEnd);
 
-	// Find second segment boundary (authority/path split)
-	const authorityEnd = path.indexOf('/', schemeEnd + 1);
-	if (authorityEnd === -1) {
-		// No path after authority
-		const originalAuthority = path.substring(schemeEnd + 1);
-		return URI.from({ scheme: originalScheme, authority: originalAuthority, path: '/' });
-	}
+  // Find second segment boundary (authority/path split)
+  const authorityEnd = path.indexOf("/", schemeEnd + 1);
+  if (authorityEnd === -1) {
+    // No path after authority
+    const originalAuthority = path.substring(schemeEnd + 1);
+    return URI.from({
+      scheme: originalScheme,
+      authority: originalAuthority,
+      path: "/",
+    });
+  }
 
-	let originalAuthority = path.substring(schemeEnd + 1, authorityEnd);
-	if (originalAuthority === '-') {
-		originalAuthority = '';
-	}
+  let originalAuthority = path.substring(schemeEnd + 1, authorityEnd);
+  if (originalAuthority === "-") {
+    originalAuthority = "";
+  }
 
-	const originalPath = path.substring(authorityEnd);
+  const originalPath = path.substring(authorityEnd);
 
-	return URI.from({
-		scheme: originalScheme,
-		authority: originalAuthority || undefined,
-		path: originalPath,
-	});
+  return URI.from({
+    scheme: originalScheme,
+    authority: originalAuthority || undefined,
+    path: originalPath,
+  });
 }
 
 /**
@@ -97,10 +104,10 @@ export function fromAgentHostUri(agentHostUri: URI): URI {
  * already defaults to `ws://`, so only `wss://` needs to be preserved.
  */
 export function normalizeRemoteAgentHostAddress(address: string): string {
-	if (address.startsWith('ws://')) {
-		return address.slice('ws://'.length);
-	}
-	return address;
+  if (address.startsWith("ws://")) {
+    return address.slice("ws://".length);
+  }
+  return address;
 }
 
 /**
@@ -116,14 +123,14 @@ export function normalizeRemoteAgentHostAddress(address: string): string {
  * 3. Everything else is url-safe base64-encoded with a `b64-` prefix.
  */
 export function agentHostAuthority(address: string): string {
-	const normalized = normalizeRemoteAgentHostAddress(address);
-	if (/^[a-zA-Z0-9]+$/.test(normalized)) {
-		return normalized;
-	}
-	if (/^[a-zA-Z0-9.:\-]+$/.test(normalized)) {
-		return normalized.replaceAll(':', '__');
-	}
-	return `b64-${encodeBase64(VSBuffer.fromString(normalized), false, true)}`;
+  const normalized = normalizeRemoteAgentHostAddress(address);
+  if (/^[a-zA-Z0-9]+$/.test(normalized)) {
+    return normalized;
+  }
+  if (/^[a-zA-Z0-9.:\-]+$/.test(normalized)) {
+    return normalized.replaceAll(":", "__");
+  }
+  return `b64-${encodeBase64(VSBuffer.fromString(normalized), false, true)}`;
 }
 
 /**
@@ -132,10 +139,10 @@ export function agentHostAuthority(address: string): string {
  * file path.
  */
 export const AGENT_HOST_LABEL_FORMATTER: ResourceLabelFormatter = {
-	scheme: AGENT_HOST_SCHEME,
-	formatting: {
-		label: '${path}',
-		separator: '/',
-		stripPathSegments: 2,
-	},
+  scheme: AGENT_HOST_SCHEME,
+  formatting: {
+    label: "${path}",
+    separator: "/",
+    stripPathSegments: 2,
+  },
 };

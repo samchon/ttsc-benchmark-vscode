@@ -3,20 +3,27 @@
  *  Licensed under the MIT License. See License.txt in the project root for license information.
  *--------------------------------------------------------------------------------------------*/
 
-import type { CancellationToken } from '../../../../base/common/cancellation.js';
-import { URI } from '../../../../base/common/uri.js';
-import { vObjAny, vString as vStringValidator } from '../../../../base/common/validation.js';
-import { ILogService } from '../../../log/common/log.js';
-import { AgentSession } from '../../common/agentService.js';
-import { parseSubagentSessionUri } from '../../common/state/sessionState.js';
+import type { CancellationToken } from "../../../../base/common/cancellation.js";
+import { URI } from "../../../../base/common/uri.js";
 import {
-	ResponsePartKind,
-	ToolCallStatus,
-	type Turn,
-} from '../../common/state/protocol/state.js';
-import { IClaudeAgentSdkService } from './claudeAgentSdkService.js';
-import { mapSessionMessagesToTurns } from './claudeReplayMapper.js';
-import { scanTranscriptForAgentIds, SUBAGENT_TOOL_NAMES, type SubagentRegistry } from './claudeSubagentRegistry.js';
+  vObjAny,
+  vString as vStringValidator,
+} from "../../../../base/common/validation.js";
+import { ILogService } from "../../../log/common/log.js";
+import { AgentSession } from "../../common/agentService.js";
+import { parseSubagentSessionUri } from "../../common/state/sessionState.js";
+import {
+  ResponsePartKind,
+  ToolCallStatus,
+  type Turn,
+} from "../../common/state/protocol/state.js";
+import { IClaudeAgentSdkService } from "./claudeAgentSdkService.js";
+import { mapSessionMessagesToTurns } from "./claudeReplayMapper.js";
+import {
+  scanTranscriptForAgentIds,
+  SUBAGENT_TOOL_NAMES,
+  type SubagentRegistry,
+} from "./claudeSubagentRegistry.js";
 
 /**
  * One link in the resolver chain. Each strategy consults a different
@@ -25,19 +32,22 @@ import { scanTranscriptForAgentIds, SUBAGENT_TOOL_NAMES, type SubagentRegistry }
  * (TextSuffix → PromptMatch → Native).
  */
 export interface ISubagentLookupStrategy {
-	/** Short label, used as a category in any future telemetry counter. */
-	readonly name: string;
-	/** Returns the agentId or `undefined` if this strategy cannot resolve the input. */
-	lookup(toolCallId: string, ctx: ISubagentLookupContext): Promise<string | undefined>;
+  /** Short label, used as a category in any future telemetry counter. */
+  readonly name: string;
+  /** Returns the agentId or `undefined` if this strategy cannot resolve the input. */
+  lookup(
+    toolCallId: string,
+    ctx: ISubagentLookupContext,
+  ): Promise<string | undefined>;
 }
 
 export interface ISubagentLookupContext {
-	readonly parentUri: URI;
-	/** SDK session id (`AgentSession.id(parentUri)`). Precomputed so strategies don't repeat the work. */
-	readonly parentSessionId: string;
-	/** Pre-fetched parent transcript when available; otherwise the strategy must fetch its own. */
-	readonly parentTranscript?: readonly Turn[];
-	readonly token: CancellationToken;
+  readonly parentUri: URI;
+  /** SDK session id (`AgentSession.id(parentUri)`). Precomputed so strategies don't repeat the work. */
+  readonly parentSessionId: string;
+  /** Pre-fetched parent transcript when available; otherwise the strategy must fetch its own. */
+  readonly parentTranscript?: readonly Turn[];
+  readonly token: CancellationToken;
 }
 
 /**
@@ -46,20 +56,28 @@ export interface ISubagentLookupContext {
  * from the live session or the parent's own replay fetch.
  */
 export class TextSuffixStrategy implements ISubagentLookupStrategy {
-	readonly name = 'text_suffix';
+  readonly name = "text_suffix";
 
-	constructor(
-		private readonly _sdk: IClaudeAgentSdkService,
-		private readonly _logService: ILogService,
-	) { }
+  constructor(
+    private readonly _sdk: IClaudeAgentSdkService,
+    private readonly _logService: ILogService,
+  ) {}
 
-	async lookup(toolCallId: string, ctx: ISubagentLookupContext): Promise<string | undefined> {
-		const transcript = await fetchParentTurns(this._sdk, this._logService, ctx, 'TextSuffix');
-		if (!transcript) {
-			return undefined;
-		}
-		return scanTranscriptForAgentIds(transcript).get(toolCallId);
-	}
+  async lookup(
+    toolCallId: string,
+    ctx: ISubagentLookupContext,
+  ): Promise<string | undefined> {
+    const transcript = await fetchParentTurns(
+      this._sdk,
+      this._logService,
+      ctx,
+      "TextSuffix",
+    );
+    if (!transcript) {
+      return undefined;
+    }
+    return scanTranscriptForAgentIds(transcript).get(toolCallId);
+  }
 }
 
 /**
@@ -69,21 +87,25 @@ export class TextSuffixStrategy implements ISubagentLookupStrategy {
  * on any SDK error so callers can short-circuit cleanly.
  */
 export async function fetchParentTurns(
-	sdk: IClaudeAgentSdkService,
-	logService: ILogService,
-	ctx: ISubagentLookupContext,
-	strategyLabel: string,
+  sdk: IClaudeAgentSdkService,
+  logService: ILogService,
+  ctx: ISubagentLookupContext,
+  strategyLabel: string,
 ): Promise<readonly Turn[] | undefined> {
-	if (ctx.parentTranscript) {
-		return ctx.parentTranscript;
-	}
-	try {
-		const messages = await sdk.getSessionMessages(ctx.parentSessionId, { includeSystemMessages: true });
-		return mapSessionMessagesToTurns(messages, ctx.parentUri, logService);
-	} catch (err) {
-		logService.warn(`[claudeSubagentResolver] ${strategyLabel}: parent transcript fetch failed: ${err}`);
-		return undefined;
-	}
+  if (ctx.parentTranscript) {
+    return ctx.parentTranscript;
+  }
+  try {
+    const messages = await sdk.getSessionMessages(ctx.parentSessionId, {
+      includeSystemMessages: true,
+    });
+    return mapSessionMessagesToTurns(messages, ctx.parentUri, logService);
+  } catch (err) {
+    logService.warn(
+      `[claudeSubagentResolver] ${strategyLabel}: parent transcript fetch failed: ${err}`,
+    );
+    return undefined;
+  }
 }
 
 // #region locally-defined validator adapters
@@ -97,16 +119,16 @@ export async function fetchParentTurns(
  * structural narrowing of arbitrary SDK JSON payloads.
  */
 function vString(input: unknown): string | undefined {
-	const r = vStringValidator().validate(input);
-	return r.error ? undefined : r.content;
+  const r = vStringValidator().validate(input);
+  return r.error ? undefined : r.content;
 }
 
 function vObj(input: unknown): Record<string, unknown> | undefined {
-	const r = vObjAny().validate(input);
-	if (r.error || r.content === null || Array.isArray(r.content)) {
-		return undefined;
-	}
-	return r.content as Record<string, unknown>;
+  const r = vObjAny().validate(input);
+  if (r.error || r.content === null || Array.isArray(r.content)) {
+    return undefined;
+  }
+  return r.content as Record<string, unknown>;
 }
 
 // #endregion
@@ -118,54 +140,72 @@ function vObj(input: unknown): Record<string, unknown> | undefined {
  * (e.g. SDK reformats the suffix) at the cost of two extra SDK calls.
  */
 export class PromptMatchStrategy implements ISubagentLookupStrategy {
-	readonly name = 'prompt_match';
+  readonly name = "prompt_match";
 
-	constructor(
-		private readonly _sdk: IClaudeAgentSdkService,
-		private readonly _logService: ILogService,
-	) { }
+  constructor(
+    private readonly _sdk: IClaudeAgentSdkService,
+    private readonly _logService: ILogService,
+  ) {}
 
-	async lookup(toolCallId: string, ctx: ISubagentLookupContext): Promise<string | undefined> {
-		const prompt = await this._loadParentPrompt(toolCallId, ctx);
-		if (!prompt) {
-			return undefined;
-		}
-		let agentIds: readonly string[];
-		try {
-			agentIds = await this._sdk.listSubagents(ctx.parentSessionId);
-		} catch (err) {
-			this._logService.warn(`[claudeSubagentResolver] PromptMatch: listSubagents failed: ${err}`);
-			return undefined;
-		}
-		for (const agentId of agentIds) {
-			if (ctx.token.isCancellationRequested) {
-				return undefined;
-			}
-			let messages;
-			try {
-				messages = await this._sdk.getSubagentMessages(ctx.parentSessionId, agentId);
-			} catch (err) {
-				this._logService.warn(`[claudeSubagentResolver] PromptMatch: getSubagentMessages(${agentId}) failed: ${err}`);
-				continue;
-			}
-			const firstMessage = extractFirstUserText(messages);
-			if (firstMessage === undefined) {
-				continue;
-			}
-			if (firstMessage === prompt) {
-				return agentId;
-			}
-		}
-		return undefined;
-	}
+  async lookup(
+    toolCallId: string,
+    ctx: ISubagentLookupContext,
+  ): Promise<string | undefined> {
+    const prompt = await this._loadParentPrompt(toolCallId, ctx);
+    if (!prompt) {
+      return undefined;
+    }
+    let agentIds: readonly string[];
+    try {
+      agentIds = await this._sdk.listSubagents(ctx.parentSessionId);
+    } catch (err) {
+      this._logService.warn(
+        `[claudeSubagentResolver] PromptMatch: listSubagents failed: ${err}`,
+      );
+      return undefined;
+    }
+    for (const agentId of agentIds) {
+      if (ctx.token.isCancellationRequested) {
+        return undefined;
+      }
+      let messages;
+      try {
+        messages = await this._sdk.getSubagentMessages(
+          ctx.parentSessionId,
+          agentId,
+        );
+      } catch (err) {
+        this._logService.warn(
+          `[claudeSubagentResolver] PromptMatch: getSubagentMessages(${agentId}) failed: ${err}`,
+        );
+        continue;
+      }
+      const firstMessage = extractFirstUserText(messages);
+      if (firstMessage === undefined) {
+        continue;
+      }
+      if (firstMessage === prompt) {
+        return agentId;
+      }
+    }
+    return undefined;
+  }
 
-	private async _loadParentPrompt(toolCallId: string, ctx: ISubagentLookupContext): Promise<string | undefined> {
-		const transcript = await fetchParentTurns(this._sdk, this._logService, ctx, 'PromptMatch');
-		if (!transcript) {
-			return undefined;
-		}
-		return extractSpawningPromptFromTranscript(transcript, toolCallId);
-	}
+  private async _loadParentPrompt(
+    toolCallId: string,
+    ctx: ISubagentLookupContext,
+  ): Promise<string | undefined> {
+    const transcript = await fetchParentTurns(
+      this._sdk,
+      this._logService,
+      ctx,
+      "PromptMatch",
+    );
+    if (!transcript) {
+      return undefined;
+    }
+    return extractSpawningPromptFromTranscript(transcript, toolCallId);
+  }
 }
 
 /**
@@ -174,70 +214,75 @@ export class PromptMatchStrategy implements ISubagentLookupStrategy {
  * subagent tool, still streaming, or input is malformed. Exported so
  * it can be tested independently of SDK fetch behavior.
  */
-export function extractSpawningPromptFromTranscript(transcript: readonly Turn[], toolCallId: string): string | undefined {
-	for (const turn of transcript) {
-		for (const part of turn.responseParts) {
-			if (part.kind !== ResponsePartKind.ToolCall) {
-				continue;
-			}
-			const state = part.toolCall;
-			if (state.toolCallId !== toolCallId) {
-				continue;
-			}
-			if (!SUBAGENT_TOOL_NAMES.has(state.toolName)) {
-				return undefined;
-			}
-			if (state.status === ToolCallStatus.Streaming) {
-				return undefined;
-			}
-			const inputRaw = state.toolInput;
-			if (typeof inputRaw !== 'string') {
-				return undefined;
-			}
-			let parsed: unknown;
-			try {
-				parsed = JSON.parse(inputRaw);
-			} catch {
-				return undefined;
-			}
-			const bag = vObj(parsed);
-			if (!bag) {
-				return undefined;
-			}
-			return vString(bag.prompt);
-		}
-	}
-	return undefined;
+export function extractSpawningPromptFromTranscript(
+  transcript: readonly Turn[],
+  toolCallId: string,
+): string | undefined {
+  for (const turn of transcript) {
+    for (const part of turn.responseParts) {
+      if (part.kind !== ResponsePartKind.ToolCall) {
+        continue;
+      }
+      const state = part.toolCall;
+      if (state.toolCallId !== toolCallId) {
+        continue;
+      }
+      if (!SUBAGENT_TOOL_NAMES.has(state.toolName)) {
+        return undefined;
+      }
+      if (state.status === ToolCallStatus.Streaming) {
+        return undefined;
+      }
+      const inputRaw = state.toolInput;
+      if (typeof inputRaw !== "string") {
+        return undefined;
+      }
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(inputRaw);
+      } catch {
+        return undefined;
+      }
+      const bag = vObj(parsed);
+      if (!bag) {
+        return undefined;
+      }
+      return vString(bag.prompt);
+    }
+  }
+  return undefined;
 }
 
-function extractFirstUserText(messages: readonly { readonly type?: string; readonly message?: unknown }[]): string | undefined {
-	for (const msg of messages) {
-		if (msg.type !== 'user') {
-			continue;
-		}
-		const inner = vObj(msg.message);
-		if (!inner) {
-			continue;
-		}
-		const content = inner.content;
-		if (typeof content === 'string') {
-			return content;
-		}
-		if (!Array.isArray(content)) {
-			continue;
-		}
-		for (const block of content) {
-			const obj = vObj(block);
-			if (!obj || obj.type !== 'text') {
-				continue;
-			}
-			const text = vString(obj.text);
-			if (text !== undefined) {
-				return text;
-			}
-		}
-	}
-	return undefined;
+function extractFirstUserText(
+  messages: readonly { readonly type?: string; readonly message?: unknown }[],
+): string | undefined {
+  for (const msg of messages) {
+    if (msg.type !== "user") {
+      continue;
+    }
+    const inner = vObj(msg.message);
+    if (!inner) {
+      continue;
+    }
+    const content = inner.content;
+    if (typeof content === "string") {
+      return content;
+    }
+    if (!Array.isArray(content)) {
+      continue;
+    }
+    for (const block of content) {
+      const obj = vObj(block);
+      if (!obj || obj.type !== "text") {
+        continue;
+      }
+      const text = vString(obj.text);
+      if (text !== undefined) {
+        return text;
+      }
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -247,10 +292,10 @@ function extractFirstUserText(messages: readonly { readonly type?: string; reado
  * falls back to the other strategies.
  */
 export class NativeStrategy implements ISubagentLookupStrategy {
-	readonly name = 'native';
-	async lookup(): Promise<string | undefined> {
-		return undefined;
-	}
+  readonly name = "native";
+  async lookup(): Promise<string | undefined> {
+    return undefined;
+  }
 }
 
 /**
@@ -260,9 +305,9 @@ export class NativeStrategy implements ISubagentLookupStrategy {
  * registry.
  */
 interface IResolveChainDeps {
-	readonly strategies: readonly ISubagentLookupStrategy[];
-	readonly cacheGet: (toolCallId: string) => string | undefined;
-	readonly cacheSet: (toolCallId: string, agentId: string) => void;
+  readonly strategies: readonly ISubagentLookupStrategy[];
+  readonly cacheGet: (toolCallId: string) => string | undefined;
+  readonly cacheSet: (toolCallId: string, agentId: string) => void;
 }
 
 /**
@@ -274,25 +319,25 @@ interface IResolveChainDeps {
  * to `undefined`.
  */
 export async function resolveAgentIdViaChain(
-	toolCallId: string,
-	ctx: ISubagentLookupContext,
-	deps: IResolveChainDeps,
+  toolCallId: string,
+  ctx: ISubagentLookupContext,
+  deps: IResolveChainDeps,
 ): Promise<string | undefined> {
-	const cached = deps.cacheGet(toolCallId);
-	if (cached) {
-		return cached;
-	}
-	for (const strategy of deps.strategies) {
-		if (ctx.token.isCancellationRequested) {
-			return undefined;
-		}
-		const hit = await strategy.lookup(toolCallId, ctx);
-		if (hit) {
-			deps.cacheSet(toolCallId, hit);
-			return hit;
-		}
-	}
-	return undefined;
+  const cached = deps.cacheGet(toolCallId);
+  if (cached) {
+    return cached;
+  }
+  for (const strategy of deps.strategies) {
+    if (ctx.token.isCancellationRequested) {
+      return undefined;
+    }
+    const hit = await strategy.lookup(toolCallId, ctx);
+    if (hit) {
+      deps.cacheSet(toolCallId, hit);
+      return hit;
+    }
+  }
+  return undefined;
 }
 
 /**
@@ -300,12 +345,15 @@ export async function resolveAgentIdViaChain(
  * ({@link getSubagentTranscript}, tests, etc.) construct a single
  * canonical ordering instead of inlining it.
  */
-function buildDefaultStrategies(sdk: IClaudeAgentSdkService, logService: ILogService): readonly ISubagentLookupStrategy[] {
-	return [
-		new TextSuffixStrategy(sdk, logService),
-		new PromptMatchStrategy(sdk, logService),
-		new NativeStrategy(),
-	];
+function buildDefaultStrategies(
+  sdk: IClaudeAgentSdkService,
+  logService: ILogService,
+): readonly ISubagentLookupStrategy[] {
+  return [
+    new TextSuffixStrategy(sdk, logService),
+    new PromptMatchStrategy(sdk, logService),
+    new NativeStrategy(),
+  ];
 }
 
 /**
@@ -320,36 +368,46 @@ function buildDefaultStrategies(sdk: IClaudeAgentSdkService, logService: ILogSer
  * which indicates a programming error in the caller.
  */
 export async function getSubagentTranscript(
-	subagentUri: URI,
-	parentRegistry: SubagentRegistry,
-	sdk: IClaudeAgentSdkService,
-	logService: ILogService,
-	token: CancellationToken,
+  subagentUri: URI,
+  parentRegistry: SubagentRegistry,
+  sdk: IClaudeAgentSdkService,
+  logService: ILogService,
+  token: CancellationToken,
 ): Promise<readonly Turn[]> {
-	const parsed = parseSubagentSessionUri(subagentUri);
-	if (!parsed) {
-		throw new Error(`getSubagentTranscript: not a subagent URI: ${subagentUri.toString()}`);
-	}
-	const { parentSession, toolCallId } = parsed;
-	const parentSessionId = AgentSession.id(parentSession);
-	const agentId = await resolveAgentIdViaChain(toolCallId, {
-		parentUri: parentSession,
-		parentSessionId,
-		token,
-	}, {
-		strategies: buildDefaultStrategies(sdk, logService),
-		cacheGet: id => parentRegistry.getSpawn(id)?.agentId,
-		cacheSet: (id, resolved) => { parentRegistry.recordSpawn(id, { agentId: resolved }); },
-	});
-	if (!agentId) {
-		return [];
-	}
-	let messages;
-	try {
-		messages = await sdk.getSubagentMessages(parentSessionId, agentId);
-	} catch (err) {
-		logService.warn(`[getSubagentTranscript] getSubagentMessages(${agentId}) failed: ${err}`);
-		return [];
-	}
-	return mapSessionMessagesToTurns(messages, subagentUri, logService);
+  const parsed = parseSubagentSessionUri(subagentUri);
+  if (!parsed) {
+    throw new Error(
+      `getSubagentTranscript: not a subagent URI: ${subagentUri.toString()}`,
+    );
+  }
+  const { parentSession, toolCallId } = parsed;
+  const parentSessionId = AgentSession.id(parentSession);
+  const agentId = await resolveAgentIdViaChain(
+    toolCallId,
+    {
+      parentUri: parentSession,
+      parentSessionId,
+      token,
+    },
+    {
+      strategies: buildDefaultStrategies(sdk, logService),
+      cacheGet: (id) => parentRegistry.getSpawn(id)?.agentId,
+      cacheSet: (id, resolved) => {
+        parentRegistry.recordSpawn(id, { agentId: resolved });
+      },
+    },
+  );
+  if (!agentId) {
+    return [];
+  }
+  let messages;
+  try {
+    messages = await sdk.getSubagentMessages(parentSessionId, agentId);
+  } catch (err) {
+    logService.warn(
+      `[getSubagentTranscript] getSubagentMessages(${agentId}) failed: ${err}`,
+    );
+    return [];
+  }
+  return mapSessionMessagesToTurns(messages, subagentUri, logService);
 }
